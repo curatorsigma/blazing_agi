@@ -1,6 +1,7 @@
 use std::sync::Arc;
 
 use tokio::net::TcpListener;
+use tracing::{event, Level};
 
 use crate::{router::Router, AGIError};
 
@@ -13,6 +14,7 @@ pub async fn serve(listener: TcpListener, router: Router) -> Result<(), AGIError
             .accept()
             .await
             .map_err(|_| AGIError::CannotSpawnListener)?;
+        event!(Level::DEBUG, "Got a new incoming connection.");
         tokio::spawn(async move {
             our_router.handle(stream).await;
         });

@@ -1,5 +1,6 @@
 use std::{collections::HashMap, error::Error, fmt::Display, path::PathBuf, str::FromStr};
 
+use tracing::Level;
 use url::Url;
 
 /// Library for rudimentary parsing of AGI Messages - variable dumps and Status
@@ -83,6 +84,7 @@ pub struct AGIStatus {
 }
 impl FromStr for AGIStatus {
     type Err = AGIParseError;
+    #[tracing::instrument(level=Level::TRACE, ret, err)]
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         // line format is
         // 200 result=some_result [some_operational_data]
@@ -127,6 +129,7 @@ pub enum AGIRequestType {
 }
 impl FromStr for AGIRequestType {
     type Err = AGIParseError;
+    #[tracing::instrument(level=Level::TRACE, ret, err)]
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         // try to parse as URI
         if let Ok(parsed_uri) = s.parse::<Url>() {
@@ -223,6 +226,7 @@ impl Display for AGIVariableDump {
 }
 impl FromStr for AGIVariableDump {
     type Err = AGIParseError;
+    #[tracing::instrument(level=Level::TRACE, ret, err)]
     fn from_str(input: &str) -> Result<Self, Self::Err> {
         let mut network_script: Option<String> = None;
         let mut request: Option<AGIRequestType> = None;
@@ -409,6 +413,7 @@ pub enum AGIMessage {
 }
 impl FromStr for AGIMessage {
     type Err = AGIParseError;
+    #[tracing::instrument(level=Level::TRACE, ret, err)]
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         if s.starts_with("agi_network: yes") {
             Ok(AGIMessage::NetworkStart)

@@ -1,3 +1,5 @@
+use tracing::Level;
+
 use crate::{command::AGICommand, AGIError, AGIRequest, Connection};
 
 /// The main trait that handles an AGI request.
@@ -8,7 +10,7 @@ use crate::{command::AGICommand, AGIError, AGIRequest, Connection};
 /// If your handler needs state between different requests, you may want to manually impl
 /// AGIHandler. Make sure to use `#[async_trait::async_trait]` for your impl block.
 #[async_trait::async_trait]
-pub trait AGIHandler: Send + Sync {
+pub trait AGIHandler: Send + Sync + std::fmt::Debug {
     async fn handle(
         &self,
         connection: &mut Connection,
@@ -37,6 +39,7 @@ impl AGIHandler for &dyn AGIHandler {
     }
 }
 
+#[derive(Debug)]
 pub struct AndThenHandler {
     first: Box<dyn AGIHandler>,
     second: Box<dyn AGIHandler>,
@@ -59,9 +62,11 @@ impl AGIHandler for AndThenHandler {
 }
 
 /// A trivial AGI response, simply acknowledging that a route does not exist.
+#[derive(Debug)]
 pub(crate) struct FallbackHandler {}
 #[async_trait::async_trait]
 impl AGIHandler for FallbackHandler {
+    #[tracing::instrument(level=Level::DEBUG, ret, err)]
     async fn handle(&self, connection: &mut Connection, _: &AGIRequest) -> Result<(), AGIError> {
         connection
             .send_command(AGICommand::Verbose("Route not found".to_string()))

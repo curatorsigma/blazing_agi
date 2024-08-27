@@ -46,7 +46,7 @@ fn create_nonce() -> String {
     return hex::encode(raw_bytes);
 }
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 struct SHA1DigestOverAGI {
     secret: String,
 }

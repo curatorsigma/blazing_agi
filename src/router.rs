@@ -1,4 +1,5 @@
 use tokio::net::TcpStream;
+use tracing::{error, event, info, trace, warn, Level};
 use url::Url;
 
 use crate::*;
@@ -8,6 +9,7 @@ use self::{handler::FallbackHandler, layer::Layer};
 
 /// A router contains the mapping from request path to handlers
 /// and contains the logic for dispatching requests.
+#[derive(Debug)]
 pub struct Router {
     routes: Vec<(Vec<String>, Box<dyn AGIHandler>)>,
     fallback: Box<dyn AGIHandler>,
@@ -88,6 +90,7 @@ impl Router {
     ///
     /// This function guarantees, that all defined captures have a value set in the returned
     /// hashmap
+    #[tracing::instrument(level=tracing::Level::TRACE,ret)]
     fn path_matches(
         path: &Vec<String>,
         url: &Url,
@@ -139,6 +142,7 @@ impl Router {
     ///
     /// NOTE: it would be nice to remove this panic and bubble an error instead
     /// PANICS if a non-FastAGI request is passed
+    #[tracing::instrument(level=tracing::Level::TRACE,ret)]
     fn route_request<'borrow>(
         &'borrow self,
         request: &AGIVariableDump,
@@ -150,6 +154,10 @@ impl Router {
         let url = match &request.request {
             agiparse::AGIRequestType::FastAGI(x) => x.clone(),
             _ => {
+                error!("INTERNAL ERROR. A caller to ::blazing_agi::Router::route_request must ensure that the input is FastAGI, and didn't.");
+                error!("Please file an issue for this error to the blazing_agi repo");
+                error!("{self:?}");
+                error!("{request:?}");
                 panic!("Caller must ensure that only FastAGI requests get passed.")
             }
         };
@@ -166,6 +174,7 @@ impl Router {
     /// Note that differently from HTTP, a request really is an incoming stream.
     /// This function removes the protocol start from the stream, extracts some parameters
     /// and then tries to call the correct handler.
+    #[tracing::instrument(level=tracing::Level::TRACE,ret)]
     pub async fn handle<'borrow>(&'borrow self, stream: TcpStream) {
         let mut conn = Connection::new(stream);
 
@@ -175,7 +184,9 @@ impl Router {
                 return;
             }
             Ok(AGIMessage::NetworkStart) => {}
-            _ => {
+            Ok(m) => {
+                info!("Got incoming connection, but the first packet was not agi_network: yes");
+                trace!("The packet was: {m}");
                 return;
             }
         };
@@ -197,14 +208,28 @@ impl Router {
                         wildcards,
                     };
                     let handle_response = handler.handle(&mut conn, &full_request).await;
-                    if let Err(_) = handle_response {
-                        return;
-                    }
+                    match handle_response {
+                        Err(AGIError::ClientSideError(x)) => {
+                            info!("During a handler, the client made an error and the handler has asked to terminate the session. The error was: {x}");
+                            return;
+                        }
+                        Err(_) => {
+                            warn!("Got a well-formed AGI request, but the handler failed. Request: {full_request:?}.");
+                            return;
+                        }
+                        Ok(_) => {
+                            event!(Level::DEBUG, "Succesfully handled a connection.");
+                        }
+                    };
                 } else {
+                    info!("Got a non-FastAGI request and ignored it.");
+                    trace!("The packet was: {request_data}");
                     return;
                 };
             }
-            _ => {
+            Ok(m) => {
+                info!("The second packet in an incoming connection was not an AGIVariableDump. Dropping the connection.");
+                trace!("The packet was: {m}");
                 return;
             }
         };

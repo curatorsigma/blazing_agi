@@ -24,6 +24,11 @@ pub enum AGIError {
     InnerError(Box<dyn std::error::Error>),
     Not200(u16),
     NoOperationalData(AGIStatus),
+    /// A special case:
+    /// This is raised when the client (asterisk) made a well-formed request
+    /// with incorrect data (such as Unauth etc) - the handler asks the router to break
+    /// communication with the client
+    ClientSideError(String),
 }
 impl std::fmt::Display for AGIError {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
@@ -63,6 +68,9 @@ impl std::fmt::Display for AGIError {
                     f,
                     "Handler expected status with operational data, but got {x}"
                 )
+            }
+            Self::ClientSideError(x) => {
+                write!(f, "Error on the Client side: {x}")
             }
         }
     }

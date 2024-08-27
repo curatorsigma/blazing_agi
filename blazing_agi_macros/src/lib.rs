@@ -27,6 +27,7 @@ pub fn create_handler(_: TokenStream, input: TokenStream) -> TokenStream {
     let struct_name = Ident::new(format!("Blazing_AGI_Handler_{fn_name}").as_str(), Span::call_site());
 
     let tokens = quote! {
+        #[derive(Debug)]
         struct #struct_name {}
         #[::async_trait::async_trait]
         impl ::blazing_agi::handler::AGIHandler for #struct_name {

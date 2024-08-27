@@ -1,5 +1,6 @@
 use tokio::io::{AsyncReadExt, AsyncWriteExt};
 use tokio::net::TcpStream;
+use tracing::Level;
 
 use crate::*;
 
@@ -24,6 +25,7 @@ impl Connection {
     /// Return an Error when sending fails or we do not get a Status message as a response.
     /// non-200 status codes are returned as Ok(the-status) and are NOT an Err as far as this
     /// method is concerned.
+    #[tracing::instrument(level=Level::TRACE, ret, err)]
     pub async fn send_command(&mut self, command: AGICommand) -> Result<AGIStatus, AGIError> {
         let string_to_send = command.to_string();
         // send the command over the stream
@@ -44,6 +46,7 @@ impl Connection {
     }
 
     /// Read the next packet and parse it as an AGIMessage
+    #[tracing::instrument(level=Level::TRACE, ret, err)]
     pub(crate) async fn read_and_parse(&mut self) -> Result<AGIMessage, AGIParseError> {
         let num_read = self.stream.read(&mut self.buf).await.unwrap();
         if num_read == 0 {
