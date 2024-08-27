@@ -1,7 +1,7 @@
 use proc_macro::TokenStream;
 use proc_macro2::Span;
 use quote::quote;
-use syn::{parse_macro_input, Expr, ExprTuple, Ident, ItemFn, PatTuple};
+use syn::{parse_macro_input, Expr, ExprTuple, Ident, ItemFn};
 
 /// Given an async fn, create an AGIHandler from it
 ///
