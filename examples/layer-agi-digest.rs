@@ -34,19 +34,15 @@ impl Display for SHA1DigestError {
 impl std::error::Error for SHA1DigestError {}
 
 fn create_nonce() -> String {
-    let mut raw_bytes: Vec<u8> = vec![];
+    let mut raw_bytes = [0_u8; 20];
+    // let mut raw_bytes: Vec<u8> = Vec::with_capacity(20);
     let now_in_secs = std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).expect("Should be after the epoch");
-    for b in now_in_secs.as_secs().to_le_bytes() {
-        raw_bytes.push(b);
-    }
-    for b in now_in_secs.subsec_millis().to_le_bytes() {
-        raw_bytes.push(b);
-    }
-    let mut buf = [0_u8; 8];
-    rand::rngs::ThreadRng::default().fill(&mut buf);
-    for b in buf.iter() {
-        raw_bytes.push(*b);
-    }
+    // 8 bytes against reuse 
+    raw_bytes[0..=7].clone_from_slice(&now_in_secs.as_secs().to_le_bytes());
+    // 4 bytes against reuse
+    raw_bytes[8..=11].clone_from_slice(&now_in_secs.subsec_millis().to_le_bytes());
+    // 8 bytes against predictability
+    rand::rngs::ThreadRng::default().fill(&mut raw_bytes[12..=19]);
     return hex::encode(raw_bytes);
 }
 
