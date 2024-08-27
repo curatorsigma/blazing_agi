@@ -36,8 +36,10 @@ impl std::error::Error for SHA1DigestError {}
 fn create_nonce() -> String {
     let mut raw_bytes = [0_u8; 20];
     // let mut raw_bytes: Vec<u8> = Vec::with_capacity(20);
-    let now_in_secs = std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).expect("Should be after the epoch");
-    // 8 bytes against reuse 
+    let now_in_secs = std::time::SystemTime::now()
+        .duration_since(std::time::UNIX_EPOCH)
+        .expect("Should be after the epoch");
+    // 8 bytes against reuse
     raw_bytes[0..=7].clone_from_slice(&now_in_secs.as_secs().to_le_bytes());
     // 4 bytes against reuse
     raw_bytes[8..=11].clone_from_slice(&now_in_secs.subsec_millis().to_le_bytes());
@@ -80,9 +82,15 @@ impl AGIHandler for SHA1DigestOverAGI {
         };
         if let Some(x) = digest_response.operational_data {
             let digest_as_str = x.trim_matches(|c| c == '(' || c == ')');
-            if expected_digest != *hex::decode(digest_as_str)
-                    .map_err(|_| AGIError::InnerError(Box::new(SHA1DigestError::DecodeError)))? {
-                connection.send_command(AGICommand::Verbose("Unauthenticated: Wrong Digest.".to_string())).await?;
+            if expected_digest
+                != *hex::decode(digest_as_str)
+                    .map_err(|_| AGIError::InnerError(Box::new(SHA1DigestError::DecodeError)))?
+            {
+                connection
+                    .send_command(AGICommand::Verbose(
+                        "Unauthenticated: Wrong Digest.".to_string(),
+                    ))
+                    .await?;
                 Err(AGIError::InnerError(Box::new(SHA1DigestError::WrongDigest)))
             } else {
                 Ok(())

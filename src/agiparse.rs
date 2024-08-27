@@ -69,7 +69,10 @@ impl Display for AGIParseError {
                 write!(f, "The input is not utf8")
             }
             Self::StatusWithoutNewline => {
-                write!(f, "A status message was contained in a buffer without a newline")
+                write!(
+                    f,
+                    "A status message was contained in a buffer without a newline"
+                )
             }
         }
     }
@@ -418,7 +421,12 @@ impl FromStr for AGIMessage {
         if s.starts_with("agi_network: yes") {
             Ok(AGIMessage::NetworkStart)
         } else if s.contains(" result=") {
-            Ok(AGIMessage::Status(s.split('\n').next().ok_or(AGIParseError::StatusWithoutNewline)?.parse()?))
+            Ok(AGIMessage::Status(
+                s.split('\n')
+                    .next()
+                    .ok_or(AGIParseError::StatusWithoutNewline)?
+                    .parse()?,
+            ))
         } else {
             Ok(AGIMessage::VariableDump(s.parse()?))
         }
