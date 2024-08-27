@@ -13,16 +13,16 @@ impl std::fmt::Display for AGICommand {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
         match self {
             Self::Verbose(msg) => {
-                write!(f, "VERBOSE \"{msg}\"")
+                write!(f, "VERBOSE \"{msg}\"\n")
             }
             Self::SetVariable(name, value) => {
-                write!(f, "SET VARIABLE \"{name}\" \"{value}\"")
+                write!(f, "SET VARIABLE \"{name}\" \"{value}\"\n")
             }
             Self::GetFullVariable(expr, channel) => {
                 if let Some(x) = channel {
-                    write!(f, "GET FULL VARIABLE \"{expr}\" \"{x}\"")
+                    write!(f, "GET FULL VARIABLE \"{expr}\" \"{x}\"\n")
                 } else {
-                    write!(f, "GET FULL VARIABLE \"{expr}\"")
+                    write!(f, "GET FULL VARIABLE \"{expr}\"\n")
                 }
             }
         }

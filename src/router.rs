@@ -65,7 +65,12 @@ impl Router {
             routes: self
                 .routes
                 .into_iter()
-                .map(|(loc, handler)| (loc.clone(), Box::new((layer.clone()).layer(handler)) as Box<dyn AGIHandler>))
+                .map(|(loc, handler)| {
+                    (
+                        loc.clone(),
+                        Box::new((layer.clone()).layer(handler)) as Box<dyn AGIHandler>,
+                    )
+                })
                 .collect(),
             fallback: self.fallback,
         };
@@ -74,6 +79,9 @@ impl Router {
     /// Find out, whether path defines a route that should handle url.
     ///
     /// path may contain captures and a trailing wildcard segment
+    ///
+    /// This function guarantees, that all defined captures have a value set in the returned
+    /// hashmap
     fn path_matches(
         path: &Vec<String>,
         url: &Url,
@@ -81,7 +89,16 @@ impl Router {
         let mut idx_in_path = 0;
         let mut captures = HashMap::<String, String>::new();
         let mut wildcards = String::new();
-        let mut path_segs = url.path_segments()?;
+        let path_segs_opt = url.path_segments();
+        // early return for empty request path
+        if path_segs_opt.is_none() {
+            if path.len() == 0 {
+                return Some((captures, None));
+            } else {
+                return None;
+            };
+        };
+        let mut path_segs = path_segs_opt.expect("is_none should have been handled earlier");
         while let Some(segment_to_match) = path_segs.next() {
             // capture: store the value
             if path[idx_in_path].starts_with(':') {
@@ -89,7 +106,9 @@ impl Router {
                 captures.insert(name.to_string(), segment_to_match.to_string());
             // wildcard: match the rest of url and early return
             } else if path[idx_in_path].starts_with('*') {
+                wildcards.push_str(segment_to_match);
                 for rem in path_segs {
+                    wildcards.push('/');
                     wildcards.push_str(rem)
                 }
                 return Some((captures, Some(wildcards)));
@@ -104,7 +123,7 @@ impl Router {
         // we have iterated through the entire url that got passed to us
         // return success, if our predefined path is also exhausted
         if idx_in_path == path.len() {
-            return Some((captures, Some(wildcards)));
+            return Some((captures, None));
         } else {
             return None;
         };
@@ -112,6 +131,7 @@ impl Router {
 
     /// Find the correct handler for a request.
     ///
+    /// NOTE: it would be nice to remove this panic and bubble an error instead
     /// PANICS if a non-FastAGI request is passed
     fn route_request<'borrow>(
         &'borrow self,
@@ -182,5 +202,118 @@ impl Router {
                 return;
             }
         };
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use super::*;
+
+    #[test]
+    fn path_matches_simple() {
+        let input_url = Url::parse("agi://some.host:4573/some/route").unwrap();
+        let known_path = vec!["some".to_string(), "route".to_string()];
+        assert_eq!(
+            Router::path_matches(&known_path, &input_url),
+            Some((HashMap::<String, String>::new(), None))
+        );
+    }
+
+    #[test]
+    fn path_matches_wildcards() {
+        let input_url = Url::parse("agi://some.host:4573/some/route/appended/wildcard").unwrap();
+        let known_path = vec![
+            "some".to_string(),
+            "route".to_string(),
+            "*irrelevant".to_string(),
+        ];
+        assert_eq!(
+            Router::path_matches(&known_path, &input_url),
+            Some((
+                HashMap::<String, String>::new(),
+                Some("appended/wildcard".to_string())
+            ))
+        );
+    }
+
+    #[test]
+    fn path_matches_empty_wildcard() {
+        let input_url = Url::parse("agi://some.host:4573/some/route").unwrap();
+        let known_path = vec!["some".to_string(), "route".to_string(), "*".to_string()];
+        assert_eq!(Router::path_matches(&known_path, &input_url), None);
+    }
+
+    #[test]
+    fn path_matches_trivial_wildcard() {
+        let input_url = Url::parse("agi://some.host:4573/some/route/").unwrap();
+        let known_path = vec!["some".to_string(), "route".to_string(), "*".to_string()];
+        assert_eq!(
+            Router::path_matches(&known_path, &input_url),
+            Some((HashMap::<String, String>::new(), Some("".to_string())))
+        );
+    }
+
+    #[test]
+    fn path_matches_captures() {
+        let input_url = Url::parse("agi://some.host:4573/scripts/the_script").unwrap();
+        let known_path = vec!["scripts".to_string(), ":name".to_string()];
+        let mut expect_captures = HashMap::<String, String>::new();
+        expect_captures.insert("name".to_string(), "the_script".to_string());
+        assert_eq!(
+            Router::path_matches(&known_path, &input_url),
+            Some((expect_captures, None))
+        );
+    }
+
+    #[test]
+    fn path_matches_captures_and_wildcard() {
+        let input_url = Url::parse("agi://some.host:4573/scripts/the_script/additionals").unwrap();
+        let known_path = vec![
+            ":directory".to_string(),
+            ":name".to_string(),
+            "*".to_string(),
+        ];
+        let mut expect_captures = HashMap::<String, String>::new();
+        expect_captures.insert("directory".to_string(), "scripts".to_string());
+        expect_captures.insert("name".to_string(), "the_script".to_string());
+        assert_eq!(
+            Router::path_matches(&known_path, &input_url),
+            Some((expect_captures, Some("additionals".to_string())))
+        );
+    }
+
+    #[test]
+    fn path_matches_trivial_path_segments() {
+        let input_url = Url::parse("agi://some.host:4573/scripts//").unwrap();
+        let known_path = vec![
+            ":directory".to_string(),
+            ":name".to_string(),
+            "".to_string(),
+        ];
+        let mut expect_captures = HashMap::<String, String>::new();
+        expect_captures.insert("directory".to_string(), "scripts".to_string());
+        expect_captures.insert("name".to_string(), "".to_string());
+        assert_eq!(
+            Router::path_matches(&known_path, &input_url),
+            Some((expect_captures, None))
+        );
+    }
+
+    #[test]
+    fn path_matches_empty_path() {
+        let input_url = Url::parse("agi://some.host:4573").unwrap();
+        let known_path = vec![];
+        let expect_captures = HashMap::<String, String>::new();
+        assert_eq!(
+            Router::path_matches(&known_path, &input_url),
+            Some((expect_captures, None))
+        );
+    }
+
+    #[test]
+    fn path_matches_no_match() {
+        let input_url = Url::parse("agi://some.host:4573/some/path").unwrap();
+        let known_path = vec!["other_path".to_string()];
+        assert_eq!(Router::path_matches(&known_path, &input_url), None);
     }
 }

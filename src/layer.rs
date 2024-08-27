@@ -1,4 +1,3 @@
-use blazing_agi_macros::and_then;
 use crate::handler::AndThenHandler;
 
 use crate::handler::AGIHandler;
@@ -10,25 +9,26 @@ pub trait Layer: Clone {
 
 #[derive(Clone)]
 pub struct AndThenLayerBefore<I>
-where I: Clone
+where
+    I: Clone,
 {
     handler: Box<I>,
 }
 impl<I> AndThenLayerBefore<I>
-where I: Clone + AGIHandler + 'static
+where
+    I: Clone + AGIHandler + 'static,
 {
     pub fn new(handler: I) -> Self {
-        AndThenLayerBefore { handler: Box::new(handler) }
+        AndThenLayerBefore {
+            handler: Box::new(handler),
+        }
     }
 }
 impl<I> Layer for AndThenLayerBefore<I>
-where I: Clone + AGIHandler + 'static
+where
+    I: Clone + AGIHandler + 'static,
 {
     fn layer<H: AGIHandler + 'static>(&self, handler: H) -> Box<dyn AGIHandler> {
-        Box::new(AndThenHandler::new(
-            self.handler.clone(),
-            Box::new(handler)
-        ))
+        Box::new(AndThenHandler::new(self.handler.clone(), Box::new(handler)))
     }
 }
-

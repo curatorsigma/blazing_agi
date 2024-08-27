@@ -80,11 +80,13 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         "/protected/foo",
         and_then!((SHA1DigestOverAGI::new("top_secret"), foo)),
     );
-    let router_equivalent = Router::new()
+    // But this is even nicer, if you use a layer:
+    // Here, every route added !before! the layer will have the digest running first.
+    let _router_equivalent = Router::new()
         .route("/protected/foo", foo)
         .layer(layer_before!(SHA1DigestOverAGI::new("top_secret")));
 
-    let listener = TcpListener::bind("0.0.0.0:5473").await?;
+    let listener = TcpListener::bind("172.21.0.31:4573").await?;
     serve(listener, router).await?;
     Ok(())
 }
