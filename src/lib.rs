@@ -71,9 +71,9 @@ impl std::error::Error for AGIError {}
 
 #[derive(Debug, PartialEq)]
 pub struct AGIRequest {
-    variables: AGIVariableDump,
-    captures: HashMap<String, String>,
-    wildcards: Option<String>,
+    pub variables: AGIVariableDump,
+    pub captures: HashMap<String, String>,
+    pub wildcards: Option<String>,
 }
 
 #[cfg(test)]
