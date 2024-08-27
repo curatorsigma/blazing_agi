@@ -10,5 +10,7 @@ url = "2.5.2"
 blazing_agi_macros = { path = "./blazing_agi_macros/" }
 
 [dev-dependencies]
+hex = "0.4.3"
+rand = "0.8.5"
 sha1 = "0.10.6"
 

@@ -20,54 +20,57 @@ pub enum AGIParseError {
     ResultUnparsable(String),
     NoBytes,
     NotUtf8,
+    StatusWithoutNewline,
 }
 impl Display for AGIParseError {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
         match self {
             Self::NoValue(x) => {
-                write!(f, "The line {x} contained no value.")?;
+                write!(f, "The line {x} contained no value.")
             }
             Self::PriorityUnparsable(x) => {
-                write!(f, "The value {x} is not parsable as priority.")?;
+                write!(f, "The value {x} is not parsable as priority.")
             }
             Self::ThreadIdUnparsable(x) => {
-                write!(f, "The value {x} is not parsable as thread ID.")?;
+                write!(f, "The value {x} is not parsable as thread ID.")
             }
             Self::EnhancedUnparsable(x) => {
-                write!(f, "The value {x} is not parsable as enhanced status.")?;
+                write!(f, "The value {x} is not parsable as enhanced status.")
             }
             Self::UnknownArg(x) => {
-                write!(f, "The argument {x} is not known.")?;
+                write!(f, "The argument {x} is not known.")
             }
             Self::CustomArgNumberUnparsable(x) => {
-                write!(f, "The argument {x} has no parsable custom arg number.")?;
+                write!(f, "The argument {x} has no parsable custom arg number.")
             }
             Self::DuplicateCustomArg(x) => {
-                write!(f, "The argument {x} was passed multiple times.")?;
+                write!(f, "The argument {x} was passed multiple times.")
             }
             Self::VariableMissing(x) => {
-                write!(f, "The argument {x} is required but was not passed.")?;
+                write!(f, "The argument {x} is required but was not passed.")
             }
             Self::NoStatusCode(x) => {
-                write!(f, "The status line {x} has no status code.")?;
+                write!(f, "The status line {x} has no status code.")
             }
             Self::StatusCodeUnparsable(x) => {
-                write!(f, "The status code in status line {x} is not parsable.")?;
+                write!(f, "The status code in status line {x} is not parsable.")
             }
             Self::NoResult(x) => {
-                write!(f, "The status line {x} has no result.")?;
+                write!(f, "The status line {x} has no result.")
             }
             Self::ResultUnparsable(x) => {
-                write!(f, "The result in status line {x} is not parsable.")?;
+                write!(f, "The result in status line {x} is not parsable.")
             }
             Self::NoBytes => {
-                write!(f, "There are no bytes to read.")?;
+                write!(f, "There are no bytes to read.")
             }
             Self::NotUtf8 => {
-                write!(f, "The input is not utf8")?;
+                write!(f, "The input is not utf8")
+            }
+            Self::StatusWithoutNewline => {
+                write!(f, "A status message was contained in a buffer without a newline")
             }
         }
-        Ok(())
     }
 }
 impl Error for AGIParseError {}
@@ -410,7 +413,7 @@ impl FromStr for AGIMessage {
         if s.starts_with("agi_network: yes") {
             Ok(AGIMessage::NetworkStart)
         } else if s.contains(" result=") {
-            Ok(AGIMessage::Status(s.parse()?))
+            Ok(AGIMessage::Status(s.split('\n').next().ok_or(AGIParseError::StatusWithoutNewline)?.parse()?))
         } else {
             Ok(AGIMessage::VariableDump(s.parse()?))
         }

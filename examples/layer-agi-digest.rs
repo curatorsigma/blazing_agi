@@ -10,17 +10,45 @@ use blazing_agi::{
     AGIError, AGIRequest,
 };
 use blazing_agi_macros::{and_then, create_handler, layer_before};
+use rand::Rng;
 use sha1::{Digest, Sha1};
 use tokio::net::TcpListener;
 
 #[derive(Debug, Clone)]
-struct SHA1DigestError {}
+enum SHA1DigestError {
+    DecodeError,
+    WrongDigest,
+}
 impl Display for SHA1DigestError {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
-        write!(f, "The returned digest is false.")
+        match self {
+            Self::DecodeError => {
+                write!(f, "The returned digest was not decodable as u8")
+            }
+            Self::WrongDigest => {
+                write!(f, "The returned digest is false")
+            }
+        }
     }
 }
 impl std::error::Error for SHA1DigestError {}
+
+fn create_nonce() -> String {
+    let mut raw_bytes: Vec<u8> = vec![];
+    let now_in_secs = std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).expect("Should be after the epoch");
+    for b in now_in_secs.as_secs().to_le_bytes() {
+        raw_bytes.push(b);
+    }
+    for b in now_in_secs.subsec_millis().to_le_bytes() {
+        raw_bytes.push(b);
+    }
+    let mut buf = [0_u8; 8];
+    rand::rngs::ThreadRng::default().fill(&mut buf);
+    for b in buf.iter() {
+        raw_bytes.push(*b);
+    }
+    return hex::encode(raw_bytes);
+}
 
 #[derive(Clone)]
 struct SHA1DigestOverAGI {
@@ -39,10 +67,11 @@ impl AGIHandler for SHA1DigestOverAGI {
     // It simply ignores it and does the AGI digest.
     // This handler effectively works as a layer later)
     async fn handle(&self, connection: &mut Connection, _: &AGIRequest) -> Result<(), AGIError> {
-        // TODO: generate nonce
-        let nonce = "";
+        let nonce = create_nonce();
         let mut hasher = Sha1::new();
         hasher.update(self.secret.as_bytes());
+        hasher.update(":".as_bytes());
+        hasher.update(&nonce.as_bytes());
         let expected_digest: [u8; 20] = hasher.finalize().into();
         let digest_response = connection
             .send_command(AGICommand::GetFullVariable(
@@ -55,8 +84,10 @@ impl AGIHandler for SHA1DigestOverAGI {
         };
         if let Some(x) = digest_response.operational_data {
             let digest_as_str = x.trim_matches(|c| c == '(' || c == ')');
-            if expected_digest != digest_as_str.as_bytes() {
-                Err(AGIError::InnerError(Box::new(SHA1DigestError {})))
+            if expected_digest != *hex::decode(digest_as_str)
+                    .map_err(|_| AGIError::InnerError(Box::new(SHA1DigestError::DecodeError)))? {
+                connection.send_command(AGICommand::Verbose("Unauthenticated: Wrong Digest.".to_string())).await?;
+                Err(AGIError::InnerError(Box::new(SHA1DigestError::WrongDigest)))
             } else {
                 Ok(())
             }

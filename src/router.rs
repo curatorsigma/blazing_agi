@@ -34,8 +34,14 @@ impl Router {
     where
         H: 'static,
     {
+        if location.len() == 0 {
+            panic!("Path must not be empty");
+        };
+        if location.chars().next().unwrap() != '/' {
+            panic!("Path must start with a '/'");
+        };
         self.routes.push((
-            location.split('/').map(|s| s.to_string()).collect(),
+            location.split('/').skip(1).map(|s| s.to_string()).collect(),
             Box::new(handler),
         ));
         self
