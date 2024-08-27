@@ -1,0 +1,11 @@
+[package]
+name = "blazing_agi"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+async-trait = "0.1.81"
+tokio = { version = "1.39.3", features = ["io-util", "macros", "net", "rt", "rt-multi-thread", "time"] }
+url = "2.5.2"
+blazing_agi_macros = { path = "./blazing_agi_macros/" }
+
