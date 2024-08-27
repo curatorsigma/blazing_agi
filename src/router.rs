@@ -30,10 +30,14 @@ impl Router {
     /// wildcard segment /*
     /// TODO::DOC dispatching happens from the first added route to the last added route.
     /// If one route matches, no other routes are considered.
-    pub fn route<H: AGIHandler>(mut self, location: &str, handler: H) -> Self where H: 'static {
+    pub fn route<H: AGIHandler>(mut self, location: &str, handler: H) -> Self
+    where
+        H: 'static,
+    {
         self.routes.push((
             location.split('/').map(|s| s.to_string()).collect(),
-            Box::new(handler)));
+            Box::new(handler),
+        ));
         self
     }
 
@@ -47,18 +51,21 @@ impl Router {
 
     /// Set the fallback handler.
     /// This will be called if no route matches a request.
-    pub fn fallback<H: AGIHandler>(mut self, handler: H) -> Self where H: 'static {
+    pub fn fallback<H: AGIHandler>(mut self, handler: H) -> Self
+    where
+        H: 'static,
+    {
         self.fallback = Box::new(handler);
         self
     }
 
     /// Add a layer(middleware) to each route that currently exists.
-    pub fn layer<L: Layer>(self, layer: &L) -> Self {
+    pub fn layer<L: Layer>(self, layer: L) -> Self {
         return Router {
             routes: self
                 .routes
                 .into_iter()
-                .map(|(loc, handler)| (loc.clone(), layer.layer(handler)))
+                .map(|(loc, handler)| (loc.clone(), Box::new((layer.clone()).layer(handler)) as Box<dyn AGIHandler>))
                 .collect(),
             fallback: self.fallback,
         };
@@ -67,7 +74,10 @@ impl Router {
     /// Find out, whether path defines a route that should handle url.
     ///
     /// path may contain captures and a trailing wildcard segment
-    fn path_matches(path: &Vec<String>, url: &Url) -> Option<(HashMap<String, String>, Option<String>,)> {
+    fn path_matches(
+        path: &Vec<String>,
+        url: &Url,
+    ) -> Option<(HashMap<String, String>, Option<String>)> {
         let mut idx_in_path = 0;
         let mut captures = HashMap::<String, String>::new();
         let mut wildcards = String::new();
@@ -81,7 +91,7 @@ impl Router {
             } else if path[idx_in_path].starts_with('*') {
                 for rem in path_segs {
                     wildcards.push_str(rem)
-                };
+                }
                 return Some((captures, Some(wildcards)));
             // normal segment - simply continue iterating
             } else {
@@ -90,11 +100,11 @@ impl Router {
                 }
             };
             idx_in_path += 1;
-        };
+        }
         // we have iterated through the entire url that got passed to us
         // return success, if our predefined path is also exhausted
         if idx_in_path == path.len() {
-            return Some((captures, Some(wildcards)))
+            return Some((captures, Some(wildcards)));
         } else {
             return None;
         };
@@ -103,18 +113,25 @@ impl Router {
     /// Find the correct handler for a request.
     ///
     /// PANICS if a non-FastAGI request is passed
-    fn route_request<'borrow>(&'borrow self, request: &AGIVariableDump) -> (&'borrow Box<dyn AGIHandler>, HashMap<String, String>, Option<String>,) {
+    fn route_request<'borrow>(
+        &'borrow self,
+        request: &AGIVariableDump,
+    ) -> (
+        &'borrow Box<dyn AGIHandler>,
+        HashMap<String, String>,
+        Option<String>,
+    ) {
         let url = match &request.request {
-            agiparse::AGIRequestType::FastAGI(x) => {
-                x.clone()
+            agiparse::AGIRequestType::FastAGI(x) => x.clone(),
+            _ => {
+                panic!("Caller must ensure that only FastAGI requests get passed.")
             }
-            _ => { panic!("Caller must ensure that only FastAGI requests get passed.") }
         };
         for (path, handler) in self.routes.iter() {
             if let Some((captures, wildcards)) = Router::path_matches(path, &url) {
                 return (&Box::new(handler), captures, wildcards);
             }
-        };
+        }
         // nothing found. return the fallback handler
         return (&self.fallback, HashMap::<String, String>::new(), None);
     }
@@ -128,15 +145,21 @@ impl Router {
 
         // the first packet has to be agi_network: yes
         match conn.read_and_parse().await {
-            Err(_) => { return; }
+            Err(_) => {
+                return;
+            }
             Ok(AGIMessage::NetworkStart) => {}
-            _ => { return; }
+            _ => {
+                return;
+            }
         };
 
         // the second has to be a variable dump
         // we parse it and dispatch the correct handler
         match conn.read_and_parse().await {
-            Err(_) => { return; }
+            Err(_) => {
+                return;
+            }
             Ok(AGIMessage::VariableDump(request_data)) => {
                 if let AGIRequestType::FastAGI(_) = request_data.request {
                     // find the handler responsible
@@ -144,7 +167,8 @@ impl Router {
                     // create the agirequest item and call the handler
                     let full_request = AGIRequest {
                         variables: request_data,
-                        captures, wildcards
+                        captures,
+                        wildcards,
                     };
                     let handle_response = handler.handle(&mut conn, &full_request).await;
                     if let Err(_) = handle_response {
@@ -154,8 +178,9 @@ impl Router {
                     return;
                 };
             }
-            _ => { return; }
+            _ => {
+                return;
+            }
         };
     }
 }
-

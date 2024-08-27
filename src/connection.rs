@@ -1,9 +1,10 @@
+use tokio::io::{AsyncReadExt, AsyncWriteExt};
 use tokio::net::TcpStream;
-use tokio::io::{AsyncWriteExt, AsyncReadExt};
 
 use crate::*;
 
 use self::agiparse::{AGIMessage, AGIParseError};
+use self::command::AGICommand;
 
 #[derive(Debug)]
 pub struct Connection {
@@ -12,7 +13,10 @@ pub struct Connection {
 }
 impl Connection {
     pub fn new(stream: TcpStream) -> Connection {
-        Connection { buf: [0; 1024], stream }
+        Connection {
+            buf: [0; 1024],
+            stream,
+        }
     }
 
     /// Send an AGI Command over this connection
@@ -23,21 +27,19 @@ impl Connection {
     pub async fn send_command(&mut self, command: AGICommand) -> Result<AGIStatus, AGIError> {
         let string_to_send = command.to_string();
         // send the command over the stream
-        self.stream.write(string_to_send.as_bytes())
+        self.stream
+            .write(string_to_send.as_bytes())
             .await
             .map_err(|e| AGIError::CannotSendCommand(e))?;
         // make sure that we get an AGIStatus as a result
-        let response = self.read_and_parse()
+        let response = self
+            .read_and_parse()
             .await
             .map_err(|e| AGIError::ParseError(e))?;
         // Get the response and return it
         match response {
-            AGIMessage::Status(x) => {
-                Ok(x)
-            }
-            x => {
-                Err(AGIError::NotAStatus(x))
-            }
+            AGIMessage::Status(x) => Ok(x),
+            x => Err(AGIError::NotAStatus(x)),
         }
     }
 
@@ -49,14 +51,9 @@ impl Connection {
         };
 
         match std::str::from_utf8(&self.buf) {
-            Err(_) => {
-                Err(AGIParseError::NotUtf8)
-            }
+            Err(_) => Err(AGIParseError::NotUtf8),
             // and it needs to be parsable as an AGI message
-            Ok(x) => {
-                x.parse::<AGIMessage>()
-            },
+            Ok(x) => x.parse::<AGIMessage>(),
         }
     }
 }
-

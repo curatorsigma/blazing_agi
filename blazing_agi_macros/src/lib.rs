@@ -1,7 +1,7 @@
 use proc_macro::TokenStream;
 use proc_macro2::Span;
 use quote::quote;
-use syn::{parse_macro_input, Ident, ItemFn};
+use syn::{parse_macro_input, Expr, ExprTuple, Ident, ItemFn, PatTuple};
 
 /// Given an async fn, create an AGIHandler from it
 ///
@@ -40,3 +40,24 @@ pub fn create_handler(_: TokenStream, input: TokenStream) -> TokenStream {
     tokens.into()
 }
 
+/// Chain two handlers. The second will only run if the first returned successfully.
+///
+/// The input to this macro is a tuple containing two expressions evaluating to an AGIHandler
+#[proc_macro]
+pub fn and_then(input: TokenStream) -> TokenStream {
+    let input = parse_macro_input!(input as ExprTuple);
+    let first = &input.elems[0];
+    let second = &input.elems[1];
+    let tokens = quote! {
+        AndThenHandler::new(Box::new(#first), Box::new(#second))
+    };
+    tokens.into()
+}
+
+#[proc_macro]
+pub fn layer_before(input: TokenStream) -> TokenStream {
+    let input = parse_macro_input!(input as Expr);
+    quote! {
+        ::blazing_agi::layer::AndThenLayerBefore::new(#input)
+    }.into()
+}

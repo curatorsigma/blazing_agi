@@ -74,9 +74,9 @@ impl Error for AGIParseError {}
 
 #[derive(Debug, PartialEq, Eq)]
 pub struct AGIStatus {
-    code: u16,
-    result: String,
-    operational_data: Option<String>,
+    pub code: u16,
+    pub result: String,
+    pub operational_data: Option<String>,
 }
 impl FromStr for AGIStatus {
     type Err = AGIParseError;
@@ -206,8 +206,15 @@ impl Display for AGIVariableDump {
         write!(f, "agi_accountcode: {}\n", self.accountcode)?;
         write!(f, "agi_threadid: {}\n", self.threadid)?;
         for idx in 0..self.custom_args.len() {
-            write!(f, "agi_arg_{}: {}\n", idx, self.custom_args.get(&(idx as u8)).expect("custom_args should contain consecutive u8s as key"))?;
-        };
+            write!(
+                f,
+                "agi_arg_{}: {}\n",
+                idx,
+                self.custom_args
+                    .get(&(idx as u8))
+                    .expect("custom_args should contain consecutive u8s as key")
+            )?;
+        }
         Ok(())
     }
 }

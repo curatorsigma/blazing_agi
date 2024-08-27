@@ -5,6 +5,7 @@ use connection::Connection;
 use handler::AGIHandler;
 
 mod agiparse;
+pub mod command;
 pub mod connection;
 pub mod handler;
 pub mod layer;
@@ -20,6 +21,9 @@ pub enum AGIError {
     CannotSendCommand(tokio::io::Error),
     ParseError(AGIParseError),
     NotAStatus(AGIMessage),
+    InnerError(Box<dyn std::error::Error>),
+    Not200(u16),
+    NoOperationalData(AGIStatus),
 }
 impl std::fmt::Display for AGIError {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
@@ -48,29 +52,22 @@ impl std::fmt::Display for AGIError {
             Self::NotAStatus(x) => {
                 write!(f, "Sent a Command, but the response was not a Status: {x}")
             }
+            Self::InnerError(x) => {
+                write!(f, "InnerError: {x}")
+            }
+            Self::Not200(x) => {
+                write!(f, "Handler expected 200-response, but got {x}")
+            }
+            Self::NoOperationalData(x) => {
+                write!(
+                    f,
+                    "Handler expected status with operational data, but got {x}"
+                )
+            }
         }
     }
 }
 impl std::error::Error for AGIError {}
-
-
-#[derive(Debug,PartialEq)]
-pub enum AGICommand {
-    Verbose(String),
-    SetVariable(String, String),
-}
-impl std::fmt::Display for AGICommand {
-    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
-        match self {
-            Self::Verbose(msg) => {
-                write!(f, "VERBOSE \"{msg}\"")
-            }
-            Self::SetVariable(name, value) => {
-                write!(f, "SET VARIABLE \"{name}\" \"{value}\"")
-            }
-        }
-    }
-}
 
 #[derive(Debug, PartialEq)]
 pub struct AGIRequest {
@@ -80,6 +77,4 @@ pub struct AGIRequest {
 }
 
 #[cfg(test)]
-mod tests {
-    
-}
+mod tests {}

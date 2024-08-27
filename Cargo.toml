@@ -9,3 +9,6 @@ tokio = { version = "1.39.3", features = ["io-util", "macros", "net", "rt", "rt-
 url = "2.5.2"
 blazing_agi_macros = { path = "./blazing_agi_macros/" }
 
+[dev-dependencies]
+sha1 = "0.10.6"
+
