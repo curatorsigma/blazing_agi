@@ -20,5 +20,5 @@ TODO:
 - test the different Commands in the real world - I actually do not have uses for most of them
 
 # License
-TODO: MIT-0
+This project is licensed under MIT-0 (MIT No Attribution).
 
