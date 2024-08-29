@@ -33,9 +33,9 @@ impl Display for SHA1DigestError {
 }
 impl std::error::Error for SHA1DigestError {}
 
+/// Create a 20-byte Nonce with 8 bytes of Randomness, encoded as a hex string
 fn create_nonce() -> String {
     let mut raw_bytes = [0_u8; 20];
-    // let mut raw_bytes: Vec<u8> = Vec::with_capacity(20);
     let now_in_secs = std::time::SystemTime::now()
         .duration_since(std::time::UNIX_EPOCH)
         .expect("Should be after the epoch");
@@ -64,6 +64,9 @@ impl AGIHandler for SHA1DigestOverAGI {
     // Note: this handler does not care about the request.
     // It simply ignores it and does the AGI digest.
     // This handler effectively works as a layer later)
+    //
+    // In asterisk, you have to set the same secret as follows:
+    // same => n,Set(BLAZING_AGI_DIGEST_SECRET=top_secret)
     async fn handle(&self, connection: &mut Connection, _: &AGIRequest) -> Result<(), AGIError> {
         let nonce = create_nonce();
         let mut hasher = Sha1::new();
@@ -113,15 +116,19 @@ async fn foo(connection: &mut Connection, request: &AGIRequest) -> Result<(), AG
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let router = Router::new().route(
         "/protected/foo",
+        // The and_then macro takes two handlers and combines them:
+        // The first will run; then the second will run if the first returned Ok(())
         and_then!((SHA1DigestOverAGI::new("top_secret"), foo)),
     );
-    // But this is even nicer, if you use a layer:
+    // But this is even nicer if you use a layer:
     // Here, every route added !before! the layer will have the digest running first.
     let _router_equivalent = Router::new()
         .route("/protected/foo", foo)
-        .layer(layer_before!(SHA1DigestOverAGI::new("top_secret")));
+        .layer(layer_before!(SHA1DigestOverAGI::new("top_secret")))
+        // this route will NOT have the SHA1 Digest running
+        .route("/not_protected/foo", foo);
 
-    let listener = TcpListener::bind("172.21.0.31:4573").await?;
+    let listener = TcpListener::bind("0.0.0.0:4573").await?;
     serve(listener, router).await?;
     Ok(())
 }
