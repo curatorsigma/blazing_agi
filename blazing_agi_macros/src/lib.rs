@@ -1,3 +1,6 @@
+//! This crate is a companion to `blazing_agi`. Please see its documentation for more information.
+//!
+//! We provide proc_macros that enable a neat API in the main crate.
 use proc_macro::TokenStream;
 use proc_macro2::Span;
 use quote::quote;
