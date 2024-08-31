@@ -17,7 +17,7 @@ unsafe_code = "forbid"
 async-trait = "0.1.81"
 tokio = { version = "1.39.3", features = ["io-util", "macros", "net", "rt", "rt-multi-thread", "time"] }
 url = "2.5.2"
-blazing_agi_macros = { path = "./blazing_agi_macros/" }
+blazing_agi_macros = { version = "0.1.0" }
 tracing = "0.1.40"
 
 [dev-dependencies]
