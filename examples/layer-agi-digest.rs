@@ -2,7 +2,7 @@ use std::fmt::Display;
 
 use async_trait::async_trait;
 use blazing_agi::{
-    command::{get_full_variable::GetFullVariable, verbose::Verbose, AGICommand, AGIResponse},
+    command::{get_full_variable::GetFullVariable, verbose::Verbose, AGIResponse},
     connection::Connection,
     handler::{AGIHandler, AndThenHandler},
     router::Router,

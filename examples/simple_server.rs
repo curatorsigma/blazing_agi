@@ -1,5 +1,5 @@
 use blazing_agi::{
-    command::{verbose::Verbose, AGICommand},
+    command::verbose::Verbose,
     router::Router,
     serve,
 };

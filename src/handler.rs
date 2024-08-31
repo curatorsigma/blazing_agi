@@ -2,7 +2,7 @@
 use tracing::Level;
 
 use crate::{
-    command::{verbose::Verbose, AGICommand},
+    command::verbose::Verbose,
     AGIError, AGIRequest, Connection,
 };
 
