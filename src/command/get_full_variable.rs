@@ -129,16 +129,16 @@ mod test {
 
     #[test]
     fn run_empty_channel() {
-        let answer = GetFullVariable::new("TEST_VAR_NAME".to_owned());
-        assert_eq!(answer.to_string(), "GET FULL VARIABLE \"TEST_VAR_NAME\"\n");
+        let cmd = GetFullVariable::new("TEST_VAR_NAME".to_owned());
+        assert_eq!(cmd.to_string(), "GET FULL VARIABLE \"TEST_VAR_NAME\"\n");
     }
 
     #[test]
     fn run_non_empty_channel() {
-        let answer = GetFullVariable::new("TEST_VAR_NAME".to_owned())
-            .with_channel("The-Channel".to_owned());
+        let cmd =
+            GetFullVariable::new("TEST_VAR_NAME".to_owned()).with_channel("The-Channel".to_owned());
         assert_eq!(
-            answer.to_string(),
+            cmd.to_string(),
             "GET FULL VARIABLE \"TEST_VAR_NAME\" \"The-Channel\"\n"
         );
     }

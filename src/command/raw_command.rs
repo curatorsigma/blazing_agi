@@ -56,7 +56,10 @@ impl InnerAGIResponse for RawCommandResponse {}
 impl<'a> TryFrom<(&'a str, Option<&'a str>)> for RawCommandResponse {
     type Error = AGIStatusParseError;
     fn try_from((result, op_data): (&str, Option<&str>)) -> Result<Self, Self::Error> {
-        Ok(RawCommandResponse { result: result.to_owned(), op_data: op_data.map(|x| x.to_owned())})
+        Ok(RawCommandResponse {
+            result: result.to_owned(),
+            op_data: op_data.map(|x| x.to_owned()),
+        })
     }
 }
 
@@ -66,18 +69,18 @@ mod test {
 
     #[test]
     fn run_command() {
-        let answer = RawCommand::new("SAY DIGITS 1425 07".to_owned());
-        assert_eq!(
-            answer.to_string(),
-            "SAY DIGITS 1425 07\n"
-        );
+        let cmd = RawCommand::new("SAY DIGITS 1425 07".to_owned());
+        assert_eq!(cmd.to_string(), "SAY DIGITS 1425 07\n");
     }
 
     #[test]
     fn parse_raw() {
         assert_eq!(
             RawCommandResponse::try_from(("0", Some("(stuff)"))).unwrap(),
-            RawCommandResponse { result: "0".to_owned(), op_data: Some("(stuff)".to_owned())}
+            RawCommandResponse {
+                result: "0".to_owned(),
+                op_data: Some("(stuff)".to_owned())
+            }
         );
     }
 }

@@ -394,11 +394,7 @@ mod test {
     #[test]
     fn path_matches_captures_and_wildcard() {
         let input_url = Url::parse("agi://some.host:4573/scripts/the_script/additionals").unwrap();
-        let known_path = vec![
-            ":directory".to_owned(),
-            ":name".to_owned(),
-            "*".to_owned(),
-        ];
+        let known_path = vec![":directory".to_owned(), ":name".to_owned(), "*".to_owned()];
         let mut expect_captures = HashMap::<String, String>::new();
         expect_captures.insert("directory".to_owned(), "scripts".to_owned());
         expect_captures.insert("name".to_owned(), "the_script".to_owned());
@@ -411,11 +407,7 @@ mod test {
     #[test]
     fn path_matches_trivial_path_segments() {
         let input_url = Url::parse("agi://some.host:4573/scripts//").unwrap();
-        let known_path = vec![
-            ":directory".to_owned(),
-            ":name".to_owned(),
-            "".to_owned(),
-        ];
+        let known_path = vec![":directory".to_owned(), ":name".to_owned(), "".to_owned()];
         let mut expect_captures = HashMap::<String, String>::new();
         expect_captures.insert("directory".to_owned(), "scripts".to_owned());
         expect_captures.insert("name".to_owned(), "".to_owned());

@@ -1,10 +1,7 @@
 //! Defines the [`AGIHandler`], the most basic instrument for answering FastAGI requests.
 use tracing::Level;
 
-use crate::{
-    command::verbose::Verbose,
-    AGIError, AGIRequest, Connection,
-};
+use crate::{command::verbose::Verbose, AGIError, AGIRequest, Connection};
 
 /// The main trait that handles an AGI request.
 ///

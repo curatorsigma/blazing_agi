@@ -99,7 +99,11 @@ impl Connection {
 #[cfg(test)]
 mod test {
     use crate::command::{
-        answer::{Answer, AnswerResponse}, get_full_variable::{GetFullVariable, ThisChannel}, raw_command::RawCommandResponse, verbose::Verbose, RawCommand, SetVariable
+        answer::{Answer, AnswerResponse},
+        get_full_variable::{GetFullVariable, ThisChannel},
+        raw_command::RawCommandResponse,
+        verbose::Verbose,
+        RawCommand, SetVariable,
     };
 
     use super::*;
@@ -147,10 +151,16 @@ mod test {
 
     #[test]
     fn raw_command() {
-        let response_body = AGIMessage::Status(AGIStatusGeneric::Ok("1".to_owned(), Some("stuff und so".to_owned())));
+        let response_body = AGIMessage::Status(AGIStatusGeneric::Ok(
+            "1".to_owned(),
+            Some("stuff und so".to_owned()),
+        ));
         assert_eq!(
             Connection::agi_response_as_specialized_status::<RawCommand>(response_body).unwrap(),
-            AGIResponse::Ok(RawCommandResponse{ result: "1".to_owned(), op_data: Some("stuff und so".to_owned())})
+            AGIResponse::Ok(RawCommandResponse {
+                result: "1".to_owned(),
+                op_data: Some("stuff und so".to_owned())
+            })
         );
     }
 }

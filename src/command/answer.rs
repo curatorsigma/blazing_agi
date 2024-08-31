@@ -68,8 +68,8 @@ mod test {
 
     #[test]
     fn run() {
-        let answer = Answer::new();
-        assert_eq!(answer.to_string(), "ANSWER\n");
+        let cmd = Answer::new();
+        assert_eq!(cmd.to_string(), "ANSWER\n");
     }
 
     #[test]

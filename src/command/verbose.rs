@@ -60,15 +60,15 @@ mod test {
 
     #[test]
     fn run_empty_message() {
-        let answer = Verbose::new("".to_owned());
-        assert_eq!(answer.to_string(), "VERBOSE \"\"\n");
+        let cmd = Verbose::new("".to_owned());
+        assert_eq!(cmd.to_string(), "VERBOSE \"\"\n");
     }
 
     #[test]
     fn run_non_empty_message() {
-        let answer = Verbose::new("I am the debug output in asterisk".to_owned());
+        let cmd = Verbose::new("I am the debug output in asterisk".to_owned());
         assert_eq!(
-            answer.to_string(),
+            cmd.to_string(),
             "VERBOSE \"I am the debug output in asterisk\"\n"
         );
     }

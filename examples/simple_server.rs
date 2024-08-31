@@ -1,8 +1,4 @@
-use blazing_agi::{
-    command::verbose::Verbose,
-    router::Router,
-    serve,
-};
+use blazing_agi::{command::verbose::Verbose, router::Router, serve};
 use blazing_agi_macros::create_handler;
 use tokio::net::TcpListener;
 
