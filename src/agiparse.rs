@@ -1,27 +1,45 @@
+//! This module parses packets as AGI Requests or Responses.
 use std::{collections::HashMap, error::Error, fmt::Display, path::PathBuf, str::FromStr};
 
 use tracing::Level;
 use url::Url;
 
-/// Library for rudimentary parsing of AGI Messages - variable dumps and Status
 
+/// The common Error type for all problems related to parsing.
 #[derive(Debug, Eq, PartialEq)]
 pub enum AGIParseError {
+    /// A line contained no value
     NoValue(String),
+    /// The agi_priority line was not parsable
     PriorityUnparsable(String),
+    /// The agi_threadid line was not parsable
     ThreadIdUnparsable(String),
+    /// the agi_enhanced line was not parsable
     EnhancedUnparsable(String),
+    /// An unknown argument was found
     UnknownArg(String),
+    /// A custom arg (agi_arg_n) hat a number (n) that was not parsable
     CustomArgNumberUnparsable(String),
+    /// The same custom arg was defined more then once
     DuplicateCustomArg(String),
+    /// A variable that is required was missing
     VariableMissing(String),
+    /// A packet is supposed to be a Status Response, but contains no status code
     NoStatusCode(String),
+    /// A status code was found but it was not parsable as a number
     StatusCodeUnparsable(String),
+    /// A Status Response did not contain a result
     NoResult(String),
+    /// The result of a Status Response was supposed to be parsable into some known type, but it
+    /// was not parsable.
     ResultUnparsable(String),
+    /// An empty packet was encountered
     NoBytes,
+    /// A packet contained non-utf8 codepoints
     NotUtf8,
+    /// A status line was encountered, but it was not properly ended by a `\n`
     StatusWithoutNewline,
+    /// A status was parsable, but it is not known
     StatusDoesNotExist(u16),
 }
 impl Display for AGIParseError {
@@ -83,11 +101,19 @@ impl Display for AGIParseError {
 }
 impl Error for AGIParseError {}
 
+/// This types contains the different possible Status, *before* they are parsed into the specific
+/// response we expected due to the sent command.
+/// The response will be further parsed down to an [`AGIResponse`](crate::command::AGIResponse)
+/// once we know to which Request this response is an answer.
 #[derive(Debug, PartialEq, Eq)]
 pub enum AGIStatusGeneric {
+    /// 200
     Ok(String, Option<String>),
+    // 510
     Invalid,
+    // 511
     DeadChannel,
+    // 520
     EndUsage,
 }
 impl std::fmt::Display for AGIStatusGeneric {
@@ -141,6 +167,8 @@ impl FromStr for AGIStatusGeneric {
     }
 }
 
+/// The different AGI Request types we may encounter in agi_request.
+/// NOTE: only FastAGI is supported.
 #[derive(Debug, PartialEq, Eq, Clone)]
 pub enum AGIRequestType {
     File(PathBuf),
@@ -172,6 +200,7 @@ impl Display for AGIRequestType {
     }
 }
 
+/// Parse the value in the agi_enhanced line
 fn enhanced_status(input: &str) -> Result<bool, AGIParseError> {
     if input == "0.0" {
         return Ok(false);
@@ -182,6 +211,9 @@ fn enhanced_status(input: &str) -> Result<bool, AGIParseError> {
     return Err(AGIParseError::EnhancedUnparsable(input.to_string()));
 }
 
+/// The VariableDump (i.e. an AGI request). This is the second packet asterisk sends, after an
+/// agi_network: yes has been sent to initiate the session.
+/// The variables are in 1-1 map to the variables asterisk sends.
 #[derive(Debug, PartialEq, Eq)]
 pub struct AGIVariableDump {
     pub network_script: String,
@@ -205,6 +237,8 @@ pub struct AGIVariableDump {
     pub enhanced: bool,
     pub accountcode: String,
     pub threadid: u64,
+    /// All arguments of the form `agi_arg_n: value` are collected here (in this case as an entry
+    /// (n)=>value )
     pub custom_args: HashMap<u8, String>,
 }
 impl Display for AGIVariableDump {
@@ -424,10 +458,15 @@ impl FromStr for AGIVariableDump {
     }
 }
 
+/// All AGI Message that we may encounter.
+/// The packet send by asterisk should always be parsable as AGIMessage.
 #[derive(Debug, PartialEq, Eq)]
 pub enum AGIMessage {
+    /// VariableDump (i.e. a request)
     VariableDump(AGIVariableDump),
+    /// Status (i.e. the Response after we have sent a command)
     Status(AGIStatusGeneric),
+    /// the packet `agi_network: yes\n`
     NetworkStart,
 }
 impl FromStr for AGIMessage {

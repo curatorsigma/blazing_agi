@@ -1,11 +1,12 @@
+//! Defines the `AGIHandler`, the most basic instrument for answering FastAGI requests.
 use tracing::Level;
 
 use crate::{command::{verbose::Verbose, AGICommand}, AGIError, AGIRequest, Connection};
 
 /// The main trait that handles an AGI request.
 ///
-/// Using this crate usually boils down to creating a `Router` from `AGIHandler`s.
-/// If the Handler needs no state, consider using the `blazing_agi_macros::create_handler` macro
+/// Using this crate usually boils down to creating a [`Router`](crate::router::Router) from [`AGIHandler`](self::AGIHandler)s.
+/// If the Handler needs no state, consider using the [`create_handler!`](`blazing_agi_macros::create_handler`) macro
 /// for converting async fn into AGIHandler.
 /// If your handler needs state between different requests, you may want to manually impl
 /// AGIHandler. Make sure to use `#[async_trait::async_trait]` for your impl block.
@@ -39,12 +40,16 @@ impl AGIHandler for &dyn AGIHandler {
     }
 }
 
+/// Apply one handler, and if that succeeded another afterwards.
+/// You can build this handler with [`and_then!`](blazing_agi_macros::and_then).
 #[derive(Debug)]
 pub struct AndThenHandler {
     first: Box<dyn AGIHandler>,
     second: Box<dyn AGIHandler>,
 }
 impl AndThenHandler {
+    /// Given the two handlers, the first one will be executed. If it succeeded, the second one
+    /// will also be executed.
     pub fn new(first: Box<dyn AGIHandler>, second: Box<dyn AGIHandler>) -> Self {
         AndThenHandler { first, second }
     }
