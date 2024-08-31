@@ -40,6 +40,9 @@
 
 // Reexport all the files in src/command/
 // They should contain one type of command each
+pub mod raw_command;
+pub use self::raw_command::RawCommand;
+
 pub mod answer;
 pub use self::answer::Answer;
 pub mod verbose;
