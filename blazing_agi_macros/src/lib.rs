@@ -27,7 +27,7 @@ pub fn create_handler(_: TokenStream, input: TokenStream) -> TokenStream {
     let struct_name = Ident::new(format!("Blazing_AGI_Handler_{fn_name}").as_str(), Span::call_site());
 
     let tokens = quote! {
-        #[derive(Debug)]
+        #[derive(Debug,Clone)]
         struct #struct_name {}
         #[::async_trait::async_trait]
         impl ::blazing_agi::handler::AGIHandler for #struct_name {
@@ -43,7 +43,7 @@ pub fn create_handler(_: TokenStream, input: TokenStream) -> TokenStream {
 
 /// Chain two handlers. The second will only run if the first returned successfully.
 ///
-/// The input to this macro is a tuple containing two expressions evaluating to an AGIHandler
+/// The input to this macro is a tuple containing two expressions evaluating to an AGIHandler.
 #[proc_macro]
 pub fn and_then(input: TokenStream) -> TokenStream {
     let input = parse_macro_input!(input as ExprTuple);
@@ -55,6 +55,10 @@ pub fn and_then(input: TokenStream) -> TokenStream {
     tokens.into()
 }
 
+/// Create an `AndThenLayerBefore` from another
+/// handler.
+///
+/// The input is a Handler.
 #[proc_macro]
 pub fn layer_before(input: TokenStream) -> TokenStream {
     let input = parse_macro_input!(input as Expr);

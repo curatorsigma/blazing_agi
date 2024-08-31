@@ -1,4 +1,4 @@
-//! Defines the `AGIHandler`, the most basic instrument for answering FastAGI requests.
+//! Defines the [`AGIHandler`], the most basic instrument for answering FastAGI requests.
 use tracing::Level;
 
 use crate::{command::{verbose::Verbose, AGICommand}, AGIError, AGIRequest, Connection};

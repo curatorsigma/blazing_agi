@@ -1,3 +1,6 @@
+//! The Router is the basic element describing a service you may want to run.
+//! A [`Router`] is made up of [`AGIHandler`]s at some paths, potentially with [`Layer`]s to apply
+//! logic to multiple routes at once.
 use tokio::net::TcpStream;
 use tracing::{error, event, info, trace, warn, Level};
 use url::Url;
@@ -28,10 +31,40 @@ impl Router {
     /// Add a route to this router.
     /// This is a mapping path -> handler.
     ///
-    /// TODO::DOC location MUST start in '/'. It MAY contain :capture segments and end in a
-    /// wildcard segment /*
-    /// TODO::DOC dispatching happens from the first added route to the last added route.
-    /// If one route matches, no other routes are considered.
+    /// The location MUST start with `/`.
+    /// The location MAY contain any number of `:capture` segments. The value of the matching
+    /// request path in this segment will be collectted into the `captures` field of the
+    /// [`AGIRequest`] passed to your handler. 
+    /// The location MAY end in a `*wildcard` segment. Anything (even multiple segments, or the
+    /// empty segment) matches this wilcard. The value matched will be collected into the
+    /// `wildcards` field of the [`AGIRequest`] passed to your handler.
+    ///
+    /// location matching happens from the first added route to the last added.
+    /// The first match found will be chosen, even if another would also match with a shorter
+    /// wildcard match.
+    /// There is no logic to ensure that two locations do not overlap.
+    ///
+    /// Example:
+    /// ```
+    /// # use blazing_agi::{command::{verbose::Verbose, AGICommand}, router::Router, serve};
+    /// # use blazing_agi_macros::create_handler;
+    /// #[create_handler]
+    /// async fn foo_handler(connection: &mut Connection, request: &AGIRequest) -> Result<(), AGIError> {
+    ///     Ok(())
+    /// }
+    /// #[create_handler]
+    /// async fn voicemail_handler(connection: &mut Connection, request: &AGIRequest) -> Result<(), AGIError> {
+    ///     // It is guaranteed that captured values actually are present in the request.captures
+    ///     // you could of course also be more paranoid and error handle this properly
+    ///     let user = request.captures.get("user").expect("Please file an issue if this fails.");
+    ///     let wildcard = request.wildcards.as_ref().expect("Please file an issue if this fails");
+    ///     Ok(())
+    /// }
+    ///
+    /// let router = Router::new()
+    ///     .route("/first/path", foo_handler)
+    ///     .route("/api/:user/voicemail/*", voicemail_handler);
+    /// ```
     pub fn route<H: AGIHandler>(mut self, location: &str, handler: H) -> Self
     where
         H: 'static,
@@ -52,6 +85,26 @@ impl Router {
     /// Merge `self` with `other` router to combine routes.
     ///
     /// The fallback of the first router will be chosen, the fallback of the second ignored.
+    ///
+    /// Example:
+    /// ```
+    /// # use blazing_agi::{command::{verbose::Verbose, AGICommand}, router::Router, serve};
+    /// # use blazing_agi_macros::create_handler;
+    /// #[create_handler]
+    /// async fn foo_handler(connection: &mut Connection, request: &AGIRequest) -> Result<(), AGIError> {
+    ///     Ok(())
+    /// }
+    /// #[create_handler]
+    /// async fn voicemail_handler(connection: &mut Connection, request: &AGIRequest) -> Result<(), AGIError> {
+    ///     Ok(())
+    /// }
+    ///
+    /// let some_router = Router::new()
+    ///     .route("/some/path", foo_handler);
+    /// let api_router = Router::new()
+    ///     .route("/api/:user/voicemail/*", voicemail_handler);
+    /// let full_router = some_router.merge(api_router);
+    /// ```
     pub fn merge(mut self, mut other: Router) -> Router {
         self.routes.append(&mut other.routes);
         self
@@ -59,6 +112,25 @@ impl Router {
 
     /// Set the fallback handler.
     /// This will be called if no route matches a request.
+    ///
+    /// Example:
+    /// ```
+    /// # use blazing_agi::{command::{verbose::Verbose, AGICommand}, router::Router, serve};
+    /// # use blazing_agi_macros::create_handler;
+    /// #[create_handler]
+    /// async fn foo_handler(connection: &mut Connection, request: &AGIRequest) -> Result<(), AGIError> {
+    ///     Ok(())
+    /// }
+    ///
+    /// #[create_handler]
+    /// async fn bar_handler(connection: &mut Connection, request: &AGIRequest) -> Result<(), AGIError> {
+    ///     Ok(())
+    /// }
+    ///
+    /// let some_router = Router::new()
+    ///     .route("/some/path", foo_handler)
+    ///     .fallback(bar_handler);
+    /// ```
     pub fn fallback<H: AGIHandler>(mut self, handler: H) -> Self
     where
         H: 'static,
@@ -68,6 +140,29 @@ impl Router {
     }
 
     /// Add a layer(middleware) to each route that currently exists.
+    ///
+    /// See `examples/layer-agi-digest.rs` for a real world example.
+    /// Example:
+    /// ```
+    /// # use blazing_agi::{command::{verbose::Verbose, AGICommand}, router::Router, serve};
+    /// # use blazing_agi_macros::{create_handler, layer_before};
+    /// #[create_handler]
+    /// async fn foo_handler(connection: &mut Connection, request: &AGIRequest) -> Result<(), AGIError> {
+    ///     Ok(())
+    /// }
+    ///
+    /// #[create_handler]
+    /// async fn bar_handler(connection: &mut Connection, request: &AGIRequest) -> Result<(), AGIError> {
+    ///     Ok(())
+    /// }
+    ///
+    /// // For both paths, bar_handler is run first, then foo_handler if bar_handler succeeds.
+    /// // The fallback is not affected.
+    /// let some_router = Router::new()
+    ///     .route("/some/path", foo_handler)
+    ///     .route("/some/other/path", foo_handler)
+    ///     .layer(layer_before!(bar_handler));
+    /// ```
     pub fn layer<L: Layer>(self, layer: L) -> Self {
         return Router {
             routes: self
@@ -175,7 +270,7 @@ impl Router {
     /// This function removes the protocol start from the stream, extracts some parameters
     /// and then tries to call the correct handler.
     #[tracing::instrument(level=tracing::Level::TRACE,ret)]
-    pub async fn handle<'borrow>(&'borrow self, stream: TcpStream) {
+    pub(crate) async fn handle<'borrow>(&'borrow self, stream: TcpStream) {
         let mut conn = Connection::new(stream);
 
         // the first packet has to be agi_network: yes
