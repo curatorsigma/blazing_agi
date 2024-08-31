@@ -1,8 +1,13 @@
 use crate::agiparse::AGIStatusGeneric;
 
 pub mod answer;
+pub use self::answer::Answer as Answer;
 pub mod verbose;
+pub use self::verbose::Verbose as Verbose;
 pub mod get_full_variable;
+pub use self::get_full_variable::GetFullVariable as GetFullVariable;
+pub mod set_variable;
+pub use self::set_variable::SetVariable as SetVariable;
 
 /// AGI Commands that we can issue
 /// Inputs are always the inputs asterisk expects, in the same order as in the documentation

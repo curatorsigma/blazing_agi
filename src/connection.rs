@@ -82,7 +82,7 @@ impl Connection {
 
 #[cfg(test)]
 mod test {
-    use crate::command::{answer::{Answer, AnswerResponse}, verbose::Verbose};
+    use crate::command::{answer::{Answer, AnswerResponse}, get_full_variable::{GetFullVariable, NotSet}, verbose::Verbose, SetVariable};
 
     use super::*;
 
@@ -96,6 +96,18 @@ mod test {
     fn parse_verbose_response() {
         let response_body = AGIMessage::Status(AGIStatusGeneric::Ok("1".to_string(), Some("".to_string())));
         assert_eq!( Connection::agi_response_as_specialized_status::<Verbose>(response_body).unwrap(), AGIResponse::Ok(command::verbose::VerboseResponse { }));
+    }
+
+    #[test]
+    fn parse_get_full_variable_incorrect() {
+        let response_body = AGIMessage::Status(AGIStatusGeneric::Ok("2".to_string(), None));
+        assert!( Connection::agi_response_as_specialized_status::<GetFullVariable<NotSet>>(response_body).is_err());
+    }
+
+    #[test]
+    fn set_variable_response_success() {
+        let response_body = AGIMessage::Status(AGIStatusGeneric::Ok("0".to_string(), None));
+        assert!( Connection::agi_response_as_specialized_status::<SetVariable>(response_body).is_err());
     }
 }
 

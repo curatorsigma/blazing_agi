@@ -1,28 +1,28 @@
 use super::*;
 
 pub trait ChannelSet: Send + Sync + std::fmt::Debug {}
-#[derive(Debug)]
+#[derive(Debug,PartialEq)]
 pub struct NotSet {}
 impl ChannelSet for NotSet {}
-#[derive(Debug)]
+#[derive(Debug,PartialEq)]
 pub struct Set {
     channel_name: String,
 }
 impl ChannelSet for Set {}
 
-#[derive(Debug)]
+#[derive(Debug,PartialEq)]
 pub struct GetFullVariable<S: ChannelSet> {
     expression: String,
     channel_name: S,
 }
 impl GetFullVariable<NotSet> {
-    pub fn new(s: String) -> Self {
-        Self { expression: s, channel_name: NotSet {} }
+    pub fn new<S: AsRef<str>>(s: S) -> Self {
+        Self { expression: s.as_ref().to_string(), channel_name: NotSet {} }
     }
 }
 impl GetFullVariable<NotSet> {
-    pub fn on_channel(self, s: String) -> GetFullVariable<Set> {
-        GetFullVariable::<Set> { expression: self.expression, channel_name: Set{ channel_name: s }}
+    pub fn with_channel<S: AsRef<str>>(self, s: S) -> GetFullVariable<Set> {
+        GetFullVariable::<Set> { expression: self.expression, channel_name: Set{ channel_name: s.as_ref().to_string() }}
     }
 }
 
@@ -43,7 +43,7 @@ impl AGICommand for GetFullVariable<NotSet> {
     type Response = GetFullVariableResponse;
 }
 
-#[derive(Debug)]
+#[derive(Debug,PartialEq)]
 pub struct GetFullVariableResponse {
     pub value: Option<String>,
 }
@@ -70,6 +70,39 @@ impl<'a> TryFrom<(&'a str, Option<&'a str>)> for GetFullVariableResponse {
                 Err(AGIStatusParseError{ result: result.to_string(), op_data: op_data.map(|x| x.to_string()), response_to_command: "GET FULL VARIABLE" })
             },
         }
+    }
+}
+
+
+#[cfg(test)]
+mod test {
+    use super::*;
+
+    #[test]
+    fn run_empty_channel() {
+        let answer = GetFullVariable::new("TEST_VAR_NAME");
+        assert_eq!(answer.to_string(), "GET FULL VARIABLE \"TEST_VAR_NAME\"\n");
+    }
+
+    #[test]
+    fn run_non_empty_channel() {
+        let answer = GetFullVariable::new("TEST_VAR_NAME").with_channel("The-Channel");
+        assert_eq!(answer.to_string(), "GET FULL VARIABLE \"TEST_VAR_NAME\" \"The-Channel\"\n");
+    }
+
+    #[test]
+    fn parse_success() {
+        assert_eq!(GetFullVariableResponse::try_from(("1", Some("TheResult"))).unwrap(), GetFullVariableResponse { value: Some("TheResult".to_string()) });
+    }
+
+    #[test]
+    fn parse_variable_does_not_exist() {
+        assert_eq!(GetFullVariableResponse::try_from(("0", None)).unwrap(), GetFullVariableResponse { value: None });
+    }
+
+    #[test]
+    fn parse_incorrect_result() {
+        assert_eq!(GetFullVariableResponse::try_from(("-1", Some("irrelevant stuff"))), Err(AGIStatusParseError { result: "-1".to_string(), op_data: Some("irrelevant stuff".to_string()), response_to_command: "GET FULL VARIABLE"}));
     }
 }
 
