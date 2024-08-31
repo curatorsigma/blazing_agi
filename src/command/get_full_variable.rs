@@ -1,54 +1,86 @@
+//! Defines the `GET FULL VARIABLE` command and its possible responses.
 use super::*;
 
-pub trait ChannelSet: Send + Sync + std::fmt::Debug {}
+// We encode the (potentially) set Channel as part of the Type
+// Here we could have used an Option<String>, but in other cases we will need
+// typestate patterns to ensure that only commands that are actuall allowed can even be built
+pub trait TargetChannel: Send + Sync + std::fmt::Debug {}
 #[derive(Debug,PartialEq)]
-pub struct NotSet {}
-impl ChannelSet for NotSet {}
+/// A variant of TargetChannel. Use the channel that originated the FastAGI call.
+pub struct ThisChannel {}
+impl TargetChannel for ThisChannel {}
 #[derive(Debug,PartialEq)]
-pub struct Set {
+/// A variant of TargetChannel. Use the defined Channel.
+pub struct OtherChannel {
+    /// Use this channel name to evaluate the expression of the [`GetFullVariable`] command that
+    /// uses this instance in its `TargetChannel`
     channel_name: String,
 }
-impl ChannelSet for Set {}
+impl TargetChannel for OtherChannel {}
 
+/// Implements the `GET FULL VARIABLE`  command in AGI
+///
+/// Evaluate an expression in a channel (defaults to own channel)
+/// Build with
+/// ```
+/// use blazing_agi::command::GetFullVariable;
+/// # use blazing_agi::command::get_full_variable::OtherChannel;
+/// let cmd = GetFullVariable::new("TheExpression".to_string())
+///     // optional
+///     .with_channel("TheChannel".to_string());
+/// // Will send:
+/// assert_eq!(cmd.to_string(), "GET FULL VARIABLE \"TheExpression\" \"TheChannel\"\n")
+/// ```
+///
+/// The associated response from [`send_command`](crate::connection::Connection::send_command) is
+/// [`GetFullVariableResponse`].
 #[derive(Debug,PartialEq)]
-pub struct GetFullVariable<S: ChannelSet> {
+pub struct GetFullVariable<S: TargetChannel> {
     expression: String,
     channel_name: S,
 }
-impl GetFullVariable<NotSet> {
-    pub fn new(s: String) -> Self {
-        Self { expression: s, channel_name: NotSet {} }
+/// With [`ThisChannel`] we signal that this command does not have a channel explicitly set.
+/// You can use [`with_channel`](Self::with_channel) to set a channel.
+impl GetFullVariable<ThisChannel> {
+    /// Simple constructor, sets the expression to evaluate.
+    pub fn new(expression: String) -> Self {
+        Self { expression, channel_name: ThisChannel {} }
     }
-}
-impl GetFullVariable<NotSet> {
-    pub fn with_channel(self, s: String) -> GetFullVariable<Set> {
-        GetFullVariable::<Set> { expression: self.expression, channel_name: Set{ channel_name: s }}
+
+    /// Set the channel on an instance that has no target channel set yet.
+    pub fn with_channel(self, channel: String) -> GetFullVariable<OtherChannel> {
+        GetFullVariable::<OtherChannel> { expression: self.expression, channel_name: OtherChannel { channel_name: channel }}
     }
 }
 
-impl std::fmt::Display for GetFullVariable<NotSet> {
+impl std::fmt::Display for GetFullVariable<ThisChannel> {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
         write!(f, "GET FULL VARIABLE \"{}\"\n", self.expression)
     }
 }
-impl std::fmt::Display for GetFullVariable<Set> {
+impl std::fmt::Display for GetFullVariable<OtherChannel> {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
         write!(f, "GET FULL VARIABLE \"{}\" \"{}\"\n", self.expression, self.channel_name.channel_name)
     }
 }
-impl AGICommand for GetFullVariable<Set> {
+impl AGICommand for GetFullVariable<OtherChannel> {
     type Response = GetFullVariableResponse;
 }
-impl AGICommand for GetFullVariable<NotSet> {
+impl AGICommand for GetFullVariable<ThisChannel> {
     type Response = GetFullVariableResponse;
 }
 
+/// The responses we can get after sending [`GetFullVariable`] that returns `200`.
 #[derive(Debug,PartialEq)]
 pub struct GetFullVariableResponse {
+    /// `value` contains the value of the expression that was evaluated by asterisk.
+    /// If the expression could not be evaluated (e.g. because a nonexistent function or variable was
+    /// used), this will be `None`.
     pub value: Option<String>,
 }
-impl InnerAGIResponse for GetFullVariableResponse {
-}
+impl InnerAGIResponse for GetFullVariableResponse {}
+/// Convert from a tuple `(result, operational_data)` to `GetFullVariableResponse`. This is used
+/// internally when parsing AGI responses to sending a [`GetFullVariable`] command.
 impl<'a> TryFrom<(&'a str, Option<&'a str>)> for GetFullVariableResponse {
     type Error = AGIStatusParseError;
     fn try_from((result, op_data): (&'a str, Option<&'a str>)) -> Result<Self, Self::Error> {

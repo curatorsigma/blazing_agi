@@ -3,18 +3,18 @@ use proc_macro2::Span;
 use quote::quote;
 use syn::{parse_macro_input, Expr, ExprTuple, Ident, ItemFn};
 
-/// Given an async fn, create an AGIHandler from it
+/// Given an async fn, create an AGIHandler from it.
 ///
-/// To use this, make sure that the fn has !exactly! this signature (you may use the types, or name
+/// To use this, make sure that the fn has *exactly* this signature (you may use the types, or name
 /// them with FQTNs)
-/// ```rust,norun
+/// ```ignore
 /// async fn foo(connection: &mut Connection, request: &AGIRequest) -> Result<(), AGIError>
 /// ```
 /// If you change the signature (even the variable names), your IDE will give you weird auto-completes
 /// and type-checking or compilation may fail.
 /// If you do not use one of the arguments, you may change their name to `_`.
 ///
-/// Note: What we really want is a transformation: async fn(&mut Connection, &AGIRequest) -> AGIHandler.
+/// Note: What we really want is a transformation: `async fn(&mut Connection, &AGIRequest) -> AGIHandler`.
 /// But naming the types (specifically: lifetimes) there is very hard until RPIT captures lifetimes.
 /// I decided for this somewhat more hacky solution: simply copy-pasting the function body
 /// directly into a new impl block with this macro.

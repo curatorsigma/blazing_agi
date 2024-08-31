@@ -82,7 +82,7 @@ impl Connection {
 
 #[cfg(test)]
 mod test {
-    use crate::command::{answer::{Answer, AnswerResponse}, get_full_variable::{GetFullVariable, NotSet}, verbose::Verbose, SetVariable};
+    use crate::command::{answer::{Answer, AnswerResponse}, get_full_variable::{GetFullVariable, ThisChannel}, verbose::Verbose, SetVariable};
 
     use super::*;
 
@@ -101,7 +101,7 @@ mod test {
     #[test]
     fn parse_get_full_variable_incorrect() {
         let response_body = AGIMessage::Status(AGIStatusGeneric::Ok("2".to_string(), None));
-        assert!( Connection::agi_response_as_specialized_status::<GetFullVariable<NotSet>>(response_body).is_err());
+        assert!( Connection::agi_response_as_specialized_status::<GetFullVariable<ThisChannel>>(response_body).is_err());
     }
 
     #[test]
