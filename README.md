@@ -59,6 +59,9 @@ Please file an issue or a PR if you want one added.
 In the meantime, you can use the `RawCommand` to send literal strings into Asterisk and do no special parsing on return types.
 
 `blazing_agi` is currently pre-1.0. Consider pinning the exact version you use to ensure you get smooth `cargo update`s.
+I will promise the following SemVer during pre-1.0:
+- Breaking changes WILL bump the minor version.
+- New Features WILL bump the patch level, and MAY bump the minor version, if they are substantial.
 
 MSRV is `rustc 1.80`. The code may work on earlier versions, but I have not tested them.
 

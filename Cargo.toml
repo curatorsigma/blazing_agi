@@ -2,6 +2,16 @@
 name = "blazing_agi"
 version = "0.1.0"
 edition = "2021"
+license = "MIT-0"
+authors = ["Jonathan Schleucher"]
+description = "blazing_agi is a FastAGI server focusing on ergonomics and correctness."
+repository = "https://github.com/curatorsigma/blazing_agi"
+keywords = ["agi","fastagi","asterisk"]
+categories = ["network-programming"]
+readme = "README.md"
+
+[lints.rust]
+unsafe_code = "forbid"
 
 [dependencies]
 async-trait = "0.1.81"
