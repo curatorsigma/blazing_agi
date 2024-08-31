@@ -17,7 +17,7 @@ TODO:
 - i will try to read PRs
 - feel free to reach out with feature requests or bug reports; this is a hobby-project
 ## Open TODOs
-- implement the remaining commands (add them to the AGICommand enum)
+- implement the different commands (see `src/command/get_full_variable.rs` for an example)
 - test the different Commands in the real world - I actually do not have uses for most of them
 
 # License

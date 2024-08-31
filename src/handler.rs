@@ -1,6 +1,6 @@
 use tracing::Level;
 
-use crate::{command::AGICommand, AGIError, AGIRequest, Connection};
+use crate::{command::{verbose::Verbose, AGICommand}, AGIError, AGIRequest, Connection};
 
 /// The main trait that handles an AGI request.
 ///
@@ -69,7 +69,7 @@ impl AGIHandler for FallbackHandler {
     #[tracing::instrument(level=Level::DEBUG, ret, err)]
     async fn handle(&self, connection: &mut Connection, _: &AGIRequest) -> Result<(), AGIError> {
         connection
-            .send_command(AGICommand::Verbose("Route not found".to_string()))
+            .send_command(Verbose::new("Route not found".to_string()))
             .await?;
         Ok(())
     }

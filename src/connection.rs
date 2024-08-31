@@ -4,8 +4,8 @@ use tracing::Level;
 
 use crate::*;
 
-use self::agiparse::{AGIMessage, AGIParseError};
-use self::command::AGICommand;
+use self::agiparse::{AGIMessage, AGIParseError, AGIStatusGeneric};
+use self::command::{AGICommand, AGIResponse};
 
 #[derive(Debug)]
 pub struct Connection {
@@ -26,7 +26,9 @@ impl Connection {
     /// non-200 status codes are returned as Ok(the-status) and are NOT an Err as far as this
     /// method is concerned.
     #[tracing::instrument(level=Level::TRACE, ret, err)]
-    pub async fn send_command(&mut self, command: AGICommand) -> Result<AGIStatus, AGIError> {
+    pub async fn send_command<H>(&mut self, command: H) -> Result<AGIResponse<H::Response>, AGIError>
+        where H: AGICommand
+    {
         let string_to_send = command.to_string();
         // send the command over the stream
         self.stream
@@ -39,9 +41,19 @@ impl Connection {
             .await
             .map_err(|e| AGIError::ParseError(e))?;
         // Get the response and return it
-        match response {
+        let status = match response {
             AGIMessage::Status(x) => Ok(x),
             x => Err(AGIError::NotAStatus(x)),
+        }?;
+        match status {
+            AGIStatusGeneric::Ok(ref result, ref op_data) => {
+                let status_specialized = H::Response::try_from((result, op_data.as_deref()))
+                    .map_err(|e| AGIError::AGIStatusUnspecializable(status, e.response_to_command))?;
+                Ok(AGIResponse::Ok(status_specialized))
+            },
+            AGIStatusGeneric::Invalid => Ok(AGIResponse::Invalid),
+            AGIStatusGeneric::DeadChannel => Ok(AGIResponse::DeadChannel),
+            AGIStatusGeneric::EndUsage => Ok(AGIResponse::EndUsage),
         }
     }
 

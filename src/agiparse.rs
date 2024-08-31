@@ -22,6 +22,7 @@ pub enum AGIParseError {
     NoBytes,
     NotUtf8,
     StatusWithoutNewline,
+    StatusDoesNotExist(u16),
 }
 impl Display for AGIParseError {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
@@ -68,6 +69,9 @@ impl Display for AGIParseError {
             Self::NotUtf8 => {
                 write!(f, "The input is not utf8")
             }
+            Self::StatusDoesNotExist(x) => {
+                write!(f, "The status code {x} does not exist")
+            }
             Self::StatusWithoutNewline => {
                 write!(
                     f,
@@ -80,12 +84,34 @@ impl Display for AGIParseError {
 impl Error for AGIParseError {}
 
 #[derive(Debug, PartialEq, Eq)]
-pub struct AGIStatus {
-    pub code: u16,
-    pub result: String,
-    pub operational_data: Option<String>,
+pub enum AGIStatusGeneric {
+    Ok(String, Option<String>),
+    Invalid,
+    DeadChannel,
+    EndUsage,
 }
-impl FromStr for AGIStatus {
+impl std::fmt::Display for AGIStatusGeneric {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        match self {
+            Self::Ok(result, op_data) => {
+                match op_data {
+                    Some(x) => { write!(f, "200 result={result} {x}") }
+                    None => { write!(f, "200 result={result}") }
+                }
+            }
+            Self::Invalid => {
+                write!(f, "510")
+            }
+            Self::DeadChannel => {
+                write!(f, "511")
+            }
+            Self::EndUsage => {
+                write!(f, "520")
+            }
+        }
+    }
+}
+impl FromStr for AGIStatusGeneric {
     type Err = AGIParseError;
     #[tracing::instrument(level=Level::TRACE, ret, err)]
     fn from_str(s: &str) -> Result<Self, Self::Err> {
@@ -105,22 +131,12 @@ impl FromStr for AGIStatus {
         }
         let result = result_part[7..].to_string();
         let operational_data = splitline.next().map(|x| x.to_string());
-        Ok(AGIStatus {
-            code,
-            result,
-            operational_data,
-        })
-    }
-}
-impl Display for AGIStatus {
-    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
-        match &self.operational_data {
-            None => {
-                write!(f, "{} result={}", self.code, self.result)
-            }
-            Some(x) => {
-                write!(f, "{} result={} {}", self.code, self.result, x)
-            }
+        match code {
+            200 => Ok(AGIStatusGeneric::Ok(result, operational_data)),
+            510 => Ok(AGIStatusGeneric::Invalid),
+            511 => Ok(AGIStatusGeneric::DeadChannel),
+            520 => Ok(AGIStatusGeneric::EndUsage),
+            x => Err(AGIParseError::StatusDoesNotExist(x)),
         }
     }
 }
@@ -411,7 +427,7 @@ impl FromStr for AGIVariableDump {
 #[derive(Debug, PartialEq, Eq)]
 pub enum AGIMessage {
     VariableDump(AGIVariableDump),
-    Status(AGIStatus),
+    Status(AGIStatusGeneric),
     NetworkStart,
 }
 impl FromStr for AGIMessage {
@@ -622,12 +638,8 @@ mod tests {
     fn agi_status_with_op_data() {
         let line = "200 result=1 done\n";
         assert_eq!(
-            line.parse::<AGIStatus>(),
-            Ok(AGIStatus {
-                code: 200,
-                result: "1".to_string(),
-                operational_data: Some("done".to_string())
-            })
+            line.parse::<AGIStatusGeneric>(),
+            Ok(AGIStatusGeneric::Ok("1".to_string(), Some("done".to_string())))
         );
     }
 
@@ -635,37 +647,33 @@ mod tests {
     fn agi_status_wo_op_data() {
         let line = "200 result=1 \n";
         assert_eq!(
-            line.parse::<AGIStatus>(),
-            Ok(AGIStatus {
-                code: 200,
-                result: "1".to_string(),
-                operational_data: None
-            })
+            line.parse::<AGIStatusGeneric>(),
+            Ok(AGIStatusGeneric::Ok("1".to_string(), None))
         );
     }
 
     #[test]
     fn agi_status_unparsable_code() {
         let line = "2f00 result=1 \n";
-        assert!(line.parse::<AGIStatus>().is_err());
+        assert!(line.parse::<AGIStatusGeneric>().is_err());
     }
 
     #[test]
     fn agi_status_unparsable_result() {
         let line = "200 result:1 \n";
-        assert!(line.parse::<AGIStatus>().is_err());
+        assert!(line.parse::<AGIStatusGeneric>().is_err());
     }
 
     #[test]
     fn agi_status_line_empty() {
         let line = " \n";
-        assert!(line.parse::<AGIStatus>().is_err());
+        assert!(line.parse::<AGIStatusGeneric>().is_err());
     }
 
     #[test]
     fn agi_status_no_result() {
         let line = "404 \n";
-        assert!(line.parse::<AGIStatus>().is_err());
+        assert!(line.parse::<AGIStatusGeneric>().is_err());
     }
 
     #[test]
@@ -673,11 +681,7 @@ mod tests {
         let message = "200 result=1 done \ncript: lolli\nagi_request: gedöns\n";
         assert_eq!(
             message.parse::<AGIMessage>(),
-            Ok(AGIMessage::Status(AGIStatus {
-                code: 200,
-                result: "1".to_string(),
-                operational_data: Some("done".to_string())
-            }))
+            Ok(AGIMessage::Status(AGIStatusGeneric::Ok("1".to_string(), Some("done".to_string()))))
         );
     }
 

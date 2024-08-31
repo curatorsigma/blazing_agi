@@ -2,7 +2,7 @@ use std::fmt::Display;
 
 use async_trait::async_trait;
 use blazing_agi::{
-    command::AGICommand,
+    command::{get_full_variable::GetFullVariable, verbose::Verbose, AGICommand, AGIResponse},
     connection::Connection,
     handler::{AGIHandler, AndThenHandler},
     router::Router,
@@ -75,31 +75,33 @@ impl AGIHandler for SHA1DigestOverAGI {
         hasher.update(&nonce.as_bytes());
         let expected_digest: [u8; 20] = hasher.finalize().into();
         let digest_response = connection
-            .send_command(AGICommand::GetFullVariable(
+            .send_command(GetFullVariable::new(
                 format!("${{SHA1(${{BLAZING_AGI_DIGEST_SECRET}}:{})}}", nonce),
-                None,
             ))
             .await?;
-        if digest_response.code != 200 {
-            return Err(AGIError::Not200(digest_response.code));
-        };
-        if let Some(x) = digest_response.operational_data {
-            let digest_as_str = x.trim_matches(|c| c == '(' || c == ')');
-            if expected_digest
-                != *hex::decode(digest_as_str)
-                    .map_err(|_| AGIError::InnerError(Box::new(SHA1DigestError::DecodeError)))?
-            {
-                connection
-                    .send_command(AGICommand::Verbose(
-                        "Unauthenticated: Wrong Digest.".to_string(),
-                    ))
-                    .await?;
-                Err(AGIError::InnerError(Box::new(SHA1DigestError::WrongDigest)))
-            } else {
-                Ok(())
+        match digest_response {
+            AGIResponse::Ok(inner_response) => {
+                if let Some(digest_as_str) = inner_response.value {
+                    if expected_digest
+                        != *hex::decode(digest_as_str)
+                            .map_err(|_| AGIError::InnerError(Box::new(SHA1DigestError::DecodeError)))?
+                    {
+                        connection
+                            .send_command(Verbose::new(
+                                "Unauthenticated: Wrong Digest.".to_string(),
+                            ))
+                            .await?;
+                        Err(AGIError::InnerError(Box::new(SHA1DigestError::WrongDigest)))
+                    } else {
+                        Ok(())
+                    }
+                } else {
+                    Err(AGIError::ClientSideError("Expected BLAZING_AGI_DIGEST_SECRET to be set, but it is not".to_string()))
+                }
             }
-        } else {
-            Err(AGIError::NoOperationalData(digest_response))
+            m => {
+                return Err(AGIError::Not200(m.into()));
+            }
         }
     }
 }
@@ -107,7 +109,7 @@ impl AGIHandler for SHA1DigestOverAGI {
 #[create_handler]
 async fn foo(connection: &mut Connection, request: &AGIRequest) -> Result<(), AGIError> {
     connection
-        .send_command(AGICommand::Verbose("Hello There!".to_string()))
+        .send_command(Verbose::new("Hello There!".to_string()))
         .await?;
     Ok(())
 }

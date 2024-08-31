@@ -1,4 +1,4 @@
-use blazing_agi::{command::AGICommand, router::Router, serve};
+use blazing_agi::{command::{verbose::Verbose, AGICommand}, router::Router, serve};
 use blazing_agi_macros::create_handler;
 use tokio::net::TcpListener;
 
@@ -13,7 +13,7 @@ async fn foo(connection: &mut Connection, request: &AGIRequest) -> Result<(), AG
 #[create_handler]
 async fn foo2(connection: &mut Connection, request: &AGIRequest) -> Result<(), AGIError> {
     connection
-        .send_command(AGICommand::Verbose("hi there".to_string()))
+        .send_command(Verbose::new("hi there".to_string()))
         .await?;
     Ok(())
 }

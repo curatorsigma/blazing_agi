@@ -1,6 +1,7 @@
 use std::collections::HashMap;
 
-use agiparse::{AGIMessage, AGIParseError, AGIStatus, AGIVariableDump};
+use agiparse::{AGIMessage, AGIParseError, AGIStatusGeneric, AGIVariableDump};
+use command::{AGIResponse, InnerAGIResponse};
 use connection::Connection;
 use handler::AGIHandler;
 
@@ -22,13 +23,16 @@ pub enum AGIError {
     ParseError(AGIParseError),
     NotAStatus(AGIMessage),
     InnerError(Box<dyn std::error::Error>),
+    /// Expected a 200-response, but got something else
     Not200(u16),
-    NoOperationalData(AGIStatus),
     /// A special case:
     /// This is raised when the client (asterisk) made a well-formed request
     /// with incorrect data (such as Unauth etc) - the handler asks the router to break
     /// communication with the client
     ClientSideError(String),
+    /// The generic AGI status could be read, the expected return type is known, but the response
+    /// actually received is not parsable as the special response type expected
+    AGIStatusUnspecializable(AGIStatusGeneric, &'static str),
 }
 impl std::fmt::Display for AGIError {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
@@ -63,14 +67,11 @@ impl std::fmt::Display for AGIError {
             Self::Not200(x) => {
                 write!(f, "Handler expected 200-response, but got {x}")
             }
-            Self::NoOperationalData(x) => {
-                write!(
-                    f,
-                    "Handler expected status with operational data, but got {x}"
-                )
-            }
             Self::ClientSideError(x) => {
                 write!(f, "Error on the Client side: {x}")
+            }
+            Self::AGIStatusUnspecializable(x, y) => {
+                write!(f, "I am unable to specialize {x} as a response to {y}")
             }
         }
     }
