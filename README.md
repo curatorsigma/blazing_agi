@@ -36,18 +36,18 @@ that should not be accessible by anyone.
 In general, blazing_agi works by defining [`AGIHandler`] (read: scripts). You then combine them
 into [`Router`](crate::router::Router)s. They define which requested uri is handled by which
 handler.
-An [`AGIHandler`] takes:
-- a &mut [`Connection`] - this is a wrapper around a tokio `TcpStream`, which handles sending
+An `AGIHandler` takes:
+- a &mut `Connection` - this is a wrapper around a tokio `TcpStream`, which handles sending
 Commands and parsing the response
-- a & [`AGIRequest`] - this contains the data send in the initial request made by the client
+- a & `AGIRequest` - this contains the data send in the initial request made by the client
 (asterisk).
 
-An [`AGIHandler`] can then use the [`Connection::send_command`] function to send commands to
+An `AGIHandler` can then use the `Connection::send_command` function to send commands to
 the client.
 When it is done, the Handler simply returns Ok(()) to signal that the
 execution was successful and the stream can be terminated.
 If an error is encountered that the Handler does not want to handle, it can be bubbled up as
-[`AGIError`], which tells the runtime that something went wrong - the stream is also closed.
+`AGIError`, which tells the runtime that something went wrong - the stream is also closed.
 
 # Limitations, Status and Stability
 `blazing_agi` requires the use of tokio. Executor independence is currently not a goal.
@@ -57,14 +57,16 @@ Please file an issue or a PR if you want one added.
 
 `blazing_agi` is currently pre-1.0. Consider pinning the exact version you use to ensure you get smooth `cargo update`s.
 
+MSRV is `rustc 1.80`. The code may work on earlier versions, but I have not tested them.
+
 # Contributing
 I am very grateful for your help in improving `blazing_agi`!
 If you need a feature, or have another suggestion for improving this project, please file an issue.
 PRs are of course highly appreciated. As a rule:
-- Use 100% safe Rust. (This is enforced by #![forbid(unsafe_code)])
+- Use 100% safe Rust. (This is enforced by `#![forbid(unsafe_code)]`)
 - Do not use `unwrap`. If a condition cannot fail, please use `except` *with a good explanation*.
 - Ensure that `cargo test` passes.
-- Use `cargo fmt`.
+- Use `cargo fmt` and consider using `cargo fix` before creating a PR.
 
 ## Open TODOs
 ### Implement a fallback command, that simply passes Strings to allow arbitrary commands
