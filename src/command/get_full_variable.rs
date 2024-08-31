@@ -1,4 +1,6 @@
 //! Defines the `GET FULL VARIABLE` command and its possible responses.
+//! See also [the official
+//! docs](https://docs.asterisk.org/Asterisk_22_Documentation/API_Documentation/AGI_Commands/get_full_variable/)
 use super::*;
 
 // We encode the (potentially) set Channel as part of the Type
