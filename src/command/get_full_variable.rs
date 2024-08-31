@@ -52,7 +52,7 @@ impl InnerAGIResponse for GetFullVariableResponse {
 impl<'a> TryFrom<(&'a str, Option<&'a str>)> for GetFullVariableResponse {
     type Error = AGIStatusParseError;
     fn try_from((result, op_data): (&'a str, Option<&'a str>)) -> Result<Self, Self::Error> {
-        let res_parsed = result.parse::<u16>();
+        let res_parsed = result.parse::<i32>();
         match res_parsed {
             Ok(1) => {
                 match op_data {

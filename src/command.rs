@@ -1,5 +1,6 @@
 use crate::agiparse::AGIStatusGeneric;
 
+pub mod answer;
 pub mod verbose;
 pub mod get_full_variable;
 
@@ -112,7 +113,7 @@ pub mod get_full_variable;
 
 
 
-#[derive(Debug)]
+#[derive(Debug,PartialEq)]
 pub struct AGIStatusParseError {
     result: String,
     op_data: Option<String>,
