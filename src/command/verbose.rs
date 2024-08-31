@@ -1,12 +1,27 @@
+//! Implement the `VERBOSE` AGI command.
+//! See also the [official documentation](https://docs.asterisk.org/Asterisk_22_Documentation/API_Documentation/AGI_Commands/verbose/)
 use super::*;
 
+/// The Verbose command.
+///
+/// Send a message to asterisk debugging.
+/// ```
+/// use blazing_agi::command::Verbose;
+/// let cmd = Verbose::new();
+/// // Will send:
+/// assert_eq!(cmd.to_string(), "Verbose\n")
+/// ```
+///
+/// The associated [`InnerAGIResponse`] from [`send_command`](crate::connection::Connection::send_command) is
+/// [`VerboseResponse`].
 #[derive(Debug)]
 pub struct Verbose {
     content: String,
 }
 impl Verbose {
-    pub fn new(s: String) -> Self {
-        Self { content: s }
+    /// Construct a Verbose command. Will send `message` to asterisk when sent.
+    pub fn new(message: String) -> Self {
+        Self { content: message }
     }
 }
 impl std::fmt::Display for Verbose {
@@ -18,10 +33,13 @@ impl AGICommand for Verbose {
     type Response = VerboseResponse;
 }
 
+/// The responses we can get when sending [`Verbose`] that returned 200.
 #[derive(Debug, PartialEq)]
 pub struct VerboseResponse {}
 impl InnerAGIResponse for VerboseResponse {
 }
+/// Convert from a tuple `(result, operational_data)` to [`VerboseResponse`]. This is used
+/// internally when parsing AGI responses to sending a [`Verbose`] command.
 impl<'a> TryFrom<(&'a str, Option<&'a str>)> for VerboseResponse {
     type Error = AGIStatusParseError;
     fn try_from((result, op_data): (&str, Option<&str>)) -> Result<Self, Self::Error> {

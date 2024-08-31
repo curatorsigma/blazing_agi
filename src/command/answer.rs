@@ -43,8 +43,7 @@ pub enum AnswerResponse {
     Failure,
 }
 
-impl InnerAGIResponse for AnswerResponse {
-}
+impl InnerAGIResponse for AnswerResponse {}
 /// Convert from a tuple `(result, operational_data)` to [`AnswerResponse`]. This is used
 /// internally when parsing AGI responses to sending a [`Answer`] command.
 impl<'a> TryFrom<(&'a str, Option<&'a str>)> for AnswerResponse {
