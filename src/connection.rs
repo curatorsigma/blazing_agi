@@ -40,8 +40,14 @@ impl Connection {
             .read_and_parse()
             .await
             .map_err(|e| AGIError::ParseError(e))?;
+        Self::agi_response_as_specialized_status::<H>(response)
+    }
+
+    fn agi_response_as_specialized_status<H>(message: AGIMessage) -> Result<AGIResponse<H::Response>, AGIError>
+        where H: AGICommand
+    {
         // Get the response and return it
-        let status = match response {
+        let status = match message {
             AGIMessage::Status(x) => Ok(x),
             x => Err(AGIError::NotAStatus(x)),
         }?;
@@ -72,3 +78,18 @@ impl Connection {
         }
     }
 }
+
+
+#[cfg(test)]
+mod test {
+    use crate::command::answer::{Answer, AnswerResponse};
+
+    use super::*;
+
+    #[test]
+    fn parse_answer_response() {
+        let response_body = AGIMessage::Status(AGIStatusGeneric::Ok("-1".to_string(), Some("did not work".to_string())));
+        assert_eq!( Connection::agi_response_as_specialized_status::<Answer>(response_body).unwrap(), AGIResponse::Ok(AnswerResponse::Failure));
+    }
+}
+
