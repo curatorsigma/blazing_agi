@@ -21,7 +21,7 @@ pub struct Answer {}
 impl Answer {
     /// Create the Answer command.
     pub fn new() -> Self {
-        Self { }
+        Self {}
     }
 }
 
@@ -35,7 +35,7 @@ impl AGICommand for Answer {
 }
 
 /// The responses we can get when sending [`Answer`] that returned 200.
-#[derive(Debug,PartialEq)]
+#[derive(Debug, PartialEq)]
 pub enum AnswerResponse {
     /// Successfully answer.
     Success,
@@ -51,15 +51,13 @@ impl<'a> TryFrom<(&'a str, Option<&'a str>)> for AnswerResponse {
     fn try_from((result, op_data): (&'a str, Option<&'a str>)) -> Result<Self, Self::Error> {
         let res_parsed = result.parse::<i32>();
         match res_parsed {
-            Ok(0) => {
-                Ok(AnswerResponse::Success)
-            },
-            Ok(-1) => {
-                Ok(AnswerResponse::Failure)
-            }
-            _ => {
-                Err(AGIStatusParseError{ result: result.to_string(), op_data: op_data.map(|x| x.to_string()), response_to_command: "ANSWER" })
-            },
+            Ok(0) => Ok(AnswerResponse::Success),
+            Ok(-1) => Ok(AnswerResponse::Failure),
+            _ => Err(AGIStatusParseError {
+                result: result.to_string(),
+                op_data: op_data.map(|x| x.to_string()),
+                response_to_command: "ANSWER",
+            }),
         }
     }
 }
@@ -76,17 +74,29 @@ mod test {
 
     #[test]
     fn parse_success() {
-        assert_eq!(AnswerResponse::try_from(("0", None)).unwrap(), AnswerResponse::Success);
+        assert_eq!(
+            AnswerResponse::try_from(("0", None)).unwrap(),
+            AnswerResponse::Success
+        );
     }
 
     #[test]
     fn parse_failure() {
-        assert_eq!(AnswerResponse::try_from(("-1", Some("other stuff"))).unwrap(), AnswerResponse::Failure);
+        assert_eq!(
+            AnswerResponse::try_from(("-1", Some("other stuff"))).unwrap(),
+            AnswerResponse::Failure
+        );
     }
 
     #[test]
     fn parse_incorrect_result() {
-        assert_eq!(AnswerResponse::try_from(("1", None)), Err(AGIStatusParseError { result: "1".to_string(), op_data: None, response_to_command: "ANSWER"}));
+        assert_eq!(
+            AnswerResponse::try_from(("1", None)),
+            Err(AGIStatusParseError {
+                result: "1".to_string(),
+                op_data: None,
+                response_to_command: "ANSWER"
+            })
+        );
     }
 }
-

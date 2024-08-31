@@ -34,7 +34,7 @@ impl Router {
     /// The location MUST start with `/`.
     /// The location MAY contain any number of `:capture` segments. The value of the matching
     /// request path in this segment will be collectted into the `captures` field of the
-    /// [`AGIRequest`] passed to your handler. 
+    /// [`AGIRequest`] passed to your handler.
     /// The location MAY end in a `*wildcard` segment. Anything (even multiple segments, or the
     /// empty segment) matches this wilcard. The value matched will be collected into the
     /// `wildcards` field of the [`AGIRequest`] passed to your handler.

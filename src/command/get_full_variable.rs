@@ -7,11 +7,11 @@ use super::*;
 // Here we could have used an Option<String>, but in other cases we will need
 // typestate patterns to ensure that only commands that are actuall allowed can even be built
 pub trait TargetChannel: Send + Sync + std::fmt::Debug {}
-#[derive(Debug,PartialEq)]
+#[derive(Debug, PartialEq)]
 /// A variant of TargetChannel. Use the channel that originated the FastAGI call.
 pub struct ThisChannel {}
 impl TargetChannel for ThisChannel {}
-#[derive(Debug,PartialEq)]
+#[derive(Debug, PartialEq)]
 /// A variant of TargetChannel. Use the defined Channel.
 pub struct OtherChannel {
     /// Use this channel name to evaluate the expression of the [`GetFullVariable`] command that
@@ -36,7 +36,7 @@ impl TargetChannel for OtherChannel {}
 ///
 /// The associated [`InnerAGIResponse`] from [`send_command`](crate::connection::Connection::send_command) is
 /// [`GetFullVariableResponse`].
-#[derive(Debug,PartialEq)]
+#[derive(Debug, PartialEq)]
 pub struct GetFullVariable<S: TargetChannel> {
     expression: String,
     channel_name: S,
@@ -46,12 +46,20 @@ pub struct GetFullVariable<S: TargetChannel> {
 impl GetFullVariable<ThisChannel> {
     /// Simple constructor, sets the expression to evaluate.
     pub fn new(expression: String) -> Self {
-        Self { expression, channel_name: ThisChannel {} }
+        Self {
+            expression,
+            channel_name: ThisChannel {},
+        }
     }
 
     /// Set the channel on an instance that has no target channel set yet.
     pub fn with_channel(self, channel: String) -> GetFullVariable<OtherChannel> {
-        GetFullVariable::<OtherChannel> { expression: self.expression, channel_name: OtherChannel { channel_name: channel }}
+        GetFullVariable::<OtherChannel> {
+            expression: self.expression,
+            channel_name: OtherChannel {
+                channel_name: channel,
+            },
+        }
     }
 }
 
@@ -62,7 +70,11 @@ impl std::fmt::Display for GetFullVariable<ThisChannel> {
 }
 impl std::fmt::Display for GetFullVariable<OtherChannel> {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
-        write!(f, "GET FULL VARIABLE \"{}\" \"{}\"\n", self.expression, self.channel_name.channel_name)
+        write!(
+            f,
+            "GET FULL VARIABLE \"{}\" \"{}\"\n",
+            self.expression, self.channel_name.channel_name
+        )
     }
 }
 impl AGICommand for GetFullVariable<OtherChannel> {
@@ -73,7 +85,7 @@ impl AGICommand for GetFullVariable<ThisChannel> {
 }
 
 /// The responses we can get after sending [`GetFullVariable`] that returns `200`.
-#[derive(Debug,PartialEq)]
+#[derive(Debug, PartialEq)]
 pub struct GetFullVariableResponse {
     /// `value` contains the value of the expression that was evaluated by asterisk.
     /// If the expression could not be evaluated (e.g. because a nonexistent function or variable was
@@ -88,25 +100,28 @@ impl<'a> TryFrom<(&'a str, Option<&'a str>)> for GetFullVariableResponse {
     fn try_from((result, op_data): (&'a str, Option<&'a str>)) -> Result<Self, Self::Error> {
         let res_parsed = result.parse::<i32>();
         match res_parsed {
-            Ok(1) => {
-                match op_data {
-                    Some(x) => {
-                        let op_data_trimmed = x.trim_matches(|c| c == '(' || c == ')');
-                        Ok(GetFullVariableResponse { value: Some(op_data_trimmed.to_string()) })
-                    },
-                    None => Err(AGIStatusParseError{ result: result.to_string(), op_data: None, response_to_command: "GET FULL VARIABLE" }),
+            Ok(1) => match op_data {
+                Some(x) => {
+                    let op_data_trimmed = x.trim_matches(|c| c == '(' || c == ')');
+                    Ok(GetFullVariableResponse {
+                        value: Some(op_data_trimmed.to_string()),
+                    })
                 }
+                None => Err(AGIStatusParseError {
+                    result: result.to_string(),
+                    op_data: None,
+                    response_to_command: "GET FULL VARIABLE",
+                }),
             },
-            Ok(0) => {
-                Ok(GetFullVariableResponse { value: None })
-            }
-            _ => {
-                Err(AGIStatusParseError{ result: result.to_string(), op_data: op_data.map(|x| x.to_string()), response_to_command: "GET FULL VARIABLE" })
-            },
+            Ok(0) => Ok(GetFullVariableResponse { value: None }),
+            _ => Err(AGIStatusParseError {
+                result: result.to_string(),
+                op_data: op_data.map(|x| x.to_string()),
+                response_to_command: "GET FULL VARIABLE",
+            }),
         }
     }
 }
-
 
 #[cfg(test)]
 mod test {
@@ -120,23 +135,41 @@ mod test {
 
     #[test]
     fn run_non_empty_channel() {
-        let answer = GetFullVariable::new("TEST_VAR_NAME".to_string()).with_channel("The-Channel".to_string());
-        assert_eq!(answer.to_string(), "GET FULL VARIABLE \"TEST_VAR_NAME\" \"The-Channel\"\n");
+        let answer = GetFullVariable::new("TEST_VAR_NAME".to_string())
+            .with_channel("The-Channel".to_string());
+        assert_eq!(
+            answer.to_string(),
+            "GET FULL VARIABLE \"TEST_VAR_NAME\" \"The-Channel\"\n"
+        );
     }
 
     #[test]
     fn parse_success() {
-        assert_eq!(GetFullVariableResponse::try_from(("1", Some("TheResult"))).unwrap(), GetFullVariableResponse { value: Some("TheResult".to_string()) });
+        assert_eq!(
+            GetFullVariableResponse::try_from(("1", Some("TheResult"))).unwrap(),
+            GetFullVariableResponse {
+                value: Some("TheResult".to_string())
+            }
+        );
     }
 
     #[test]
     fn parse_variable_does_not_exist() {
-        assert_eq!(GetFullVariableResponse::try_from(("0", None)).unwrap(), GetFullVariableResponse { value: None });
+        assert_eq!(
+            GetFullVariableResponse::try_from(("0", None)).unwrap(),
+            GetFullVariableResponse { value: None }
+        );
     }
 
     #[test]
     fn parse_incorrect_result() {
-        assert_eq!(GetFullVariableResponse::try_from(("-1", Some("irrelevant stuff"))), Err(AGIStatusParseError { result: "-1".to_string(), op_data: Some("irrelevant stuff".to_string()), response_to_command: "GET FULL VARIABLE"}));
+        assert_eq!(
+            GetFullVariableResponse::try_from(("-1", Some("irrelevant stuff"))),
+            Err(AGIStatusParseError {
+                result: "-1".to_string(),
+                op_data: Some("irrelevant stuff".to_string()),
+                response_to_command: "GET FULL VARIABLE"
+            })
+        );
     }
 }
-

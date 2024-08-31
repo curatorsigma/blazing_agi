@@ -75,16 +75,18 @@ impl AGIHandler for SHA1DigestOverAGI {
         hasher.update(&nonce.as_bytes());
         let expected_digest: [u8; 20] = hasher.finalize().into();
         let digest_response = connection
-            .send_command(GetFullVariable::new(
-                format!("${{SHA1(${{BLAZING_AGI_DIGEST_SECRET}}:{})}}", nonce),
-            ))
+            .send_command(GetFullVariable::new(format!(
+                "${{SHA1(${{BLAZING_AGI_DIGEST_SECRET}}:{})}}",
+                nonce
+            )))
             .await?;
         match digest_response {
             AGIResponse::Ok(inner_response) => {
                 if let Some(digest_as_str) = inner_response.value {
                     if expected_digest
-                        != *hex::decode(digest_as_str)
-                            .map_err(|_| AGIError::InnerError(Box::new(SHA1DigestError::DecodeError)))?
+                        != *hex::decode(digest_as_str).map_err(|_| {
+                            AGIError::InnerError(Box::new(SHA1DigestError::DecodeError))
+                        })?
                     {
                         connection
                             .send_command(Verbose::new(
@@ -96,7 +98,9 @@ impl AGIHandler for SHA1DigestOverAGI {
                         Ok(())
                     }
                 } else {
-                    Err(AGIError::ClientSideError("Expected BLAZING_AGI_DIGEST_SECRET to be set, but it is not".to_string()))
+                    Err(AGIError::ClientSideError(
+                        "Expected BLAZING_AGI_DIGEST_SECRET to be set, but it is not".to_string(),
+                    ))
                 }
             }
             m => {

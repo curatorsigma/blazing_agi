@@ -4,7 +4,6 @@ use std::{collections::HashMap, error::Error, fmt::Display, path::PathBuf, str::
 use tracing::Level;
 use url::Url;
 
-
 /// The common Error type for all problems related to parsing.
 #[derive(Debug, Eq, PartialEq)]
 pub enum AGIParseError {
@@ -119,12 +118,14 @@ pub enum AGIStatusGeneric {
 impl std::fmt::Display for AGIStatusGeneric {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
         match self {
-            Self::Ok(result, op_data) => {
-                match op_data {
-                    Some(x) => { write!(f, "200 result={result} {x}") }
-                    None => { write!(f, "200 result={result}") }
+            Self::Ok(result, op_data) => match op_data {
+                Some(x) => {
+                    write!(f, "200 result={result} {x}")
                 }
-            }
+                None => {
+                    write!(f, "200 result={result}")
+                }
+            },
             Self::Invalid => {
                 write!(f, "510")
             }
@@ -678,7 +679,10 @@ mod tests {
         let line = "200 result=1 done\n";
         assert_eq!(
             line.parse::<AGIStatusGeneric>(),
-            Ok(AGIStatusGeneric::Ok("1".to_string(), Some("done".to_string())))
+            Ok(AGIStatusGeneric::Ok(
+                "1".to_string(),
+                Some("done".to_string())
+            ))
         );
     }
 
@@ -720,7 +724,10 @@ mod tests {
         let message = "200 result=1 done \ncript: lolli\nagi_request: gedöns\n";
         assert_eq!(
             message.parse::<AGIMessage>(),
-            Ok(AGIMessage::Status(AGIStatusGeneric::Ok("1".to_string(), Some("done".to_string()))))
+            Ok(AGIMessage::Status(AGIStatusGeneric::Ok(
+                "1".to_string(),
+                Some("done".to_string())
+            )))
         );
     }
 

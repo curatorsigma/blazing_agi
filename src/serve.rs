@@ -21,4 +21,3 @@ pub async fn serve(listener: TcpListener, router: Router) -> Result<(), AGIError
         });
     }
 }
-

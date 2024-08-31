@@ -41,16 +41,16 @@
 // Reexport all the files in src/command/
 // They should contain one type of command each
 pub mod answer;
-pub use self::answer::Answer as Answer;
+pub use self::answer::Answer;
 pub mod verbose;
-pub use self::verbose::Verbose as Verbose;
+pub use self::verbose::Verbose;
 pub mod get_full_variable;
-pub use self::get_full_variable::GetFullVariable as GetFullVariable;
+pub use self::get_full_variable::GetFullVariable;
 pub mod set_variable;
-pub use self::set_variable::SetVariable as SetVariable;
+pub use self::set_variable::SetVariable;
 
 /// An Error that occured while converting an AGIStatusGeneric to a specialized response.
-#[derive(Debug,PartialEq)]
+#[derive(Debug, PartialEq)]
 pub struct AGIStatusParseError {
     result: String,
     op_data: Option<String>,
@@ -58,7 +58,11 @@ pub struct AGIStatusParseError {
 }
 impl std::fmt::Display for AGIStatusParseError {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
-        write!(f, "Unable to parse result {}, data {:?} as {} Status.", self.result, self.op_data, self.response_to_command)
+        write!(
+            f,
+            "Unable to parse result {}, data {:?} as {} Status.",
+            self.result, self.op_data, self.response_to_command
+        )
     }
 }
 impl std::error::Error for AGIStatusParseError {}
@@ -66,8 +70,11 @@ impl std::error::Error for AGIStatusParseError {}
 /// These are the different responses we can get to our AGI commands.
 /// In this Enum, the response is fully parsed and will look different for each command in the Ok
 /// case.
-#[derive(Debug,PartialEq)]
-pub enum AGIResponse<H> where H: InnerAGIResponse + Sized {
+#[derive(Debug, PartialEq)]
+pub enum AGIResponse<H>
+where
+    H: InnerAGIResponse + Sized,
+{
     /// 200 - The Inner Value is the fully parsed Response and depends on the command
     /// sent.
     Ok(H),
@@ -79,7 +86,10 @@ pub enum AGIResponse<H> where H: InnerAGIResponse + Sized {
     EndUsage,
 }
 /// Convert a Response back into its response code
-impl<H> Into<u16> for AGIResponse<H> where H: InnerAGIResponse + Sized {
+impl<H> Into<u16> for AGIResponse<H>
+where
+    H: InnerAGIResponse + Sized,
+{
     fn into(self) -> u16 {
         match self {
             AGIResponse::Ok(_) => 200,
@@ -92,16 +102,21 @@ impl<H> Into<u16> for AGIResponse<H> where H: InnerAGIResponse + Sized {
 
 /// The part of the 200(Ok)-Case response that is specific to the issued Command.
 /// The appropriate Response type will be listed under each Command in [`crate::command`].
-pub trait InnerAGIResponse: std::fmt::Debug + for<'a> TryFrom<(&'a str, Option<&'a str>), Error = AGIStatusParseError>  + Send + Sync {}
+pub trait InnerAGIResponse:
+    std::fmt::Debug
+    + for<'a> TryFrom<(&'a str, Option<&'a str>), Error = AGIStatusParseError>
+    + Send
+    + Sync
+{
+}
 
 /// A command that can be issued via AGI. See examples in src/command/*.rs
 pub trait AGICommand: std::fmt::Display + std::fmt::Debug + Send + Sync {
     type Response: InnerAGIResponse;
 }
 
-
 /// Characters a user can type when getting DTMF data
-#[derive(Debug,PartialEq)]
+#[derive(Debug, PartialEq)]
 pub enum Characters {
     Zero,
     One,
@@ -118,7 +133,7 @@ pub enum Characters {
 }
 
 /// Digits a user can type
-#[derive(Debug,PartialEq)]
+#[derive(Debug, PartialEq)]
 pub enum Digit {
     Zero,
     One,
@@ -131,7 +146,7 @@ pub enum Digit {
     Eight,
     Nine,
 }
-impl Into<Characters> for Digit{
+impl Into<Characters> for Digit {
     fn into(self) -> Characters {
         match self {
             Digit::Zero => Characters::Zero,
@@ -147,4 +162,3 @@ impl Into<Characters> for Digit{
         }
     }
 }
-

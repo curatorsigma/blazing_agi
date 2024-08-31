@@ -9,7 +9,7 @@
 //! use blazing_agi::{command::{verbose::Verbose}, router::Router, serve};
 //! use blazing_agi_macros::create_handler;
 //! use tokio::net::TcpListener;
-//! 
+//!
 //! // The create_handler macro is used to turn an async fn into a handler.
 //! // Make sure to use the same signature as here (including the variable names, but not the function
 //! // name)
@@ -18,7 +18,7 @@
 //!     connection.send_command(Verbose::new("Hello There".to_string())).await?;
 //!     Ok(())
 //! }
-//! 
+//!
 //! #[tokio::main]
 //! async fn main() -> Result<(), Box<dyn std::error::Error>> {
 //!     // Create the router from the handlers you have defined
@@ -145,4 +145,3 @@ pub struct AGIRequest {
     /// The pathsegments of the request uri that were captured in * segments.
     pub wildcards: Option<String>,
 }
-

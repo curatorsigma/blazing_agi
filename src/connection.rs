@@ -31,8 +31,12 @@ impl Connection {
     ///
     /// Note that the precice return type depends on the command sent.
     #[tracing::instrument(level=Level::TRACE, ret, err)]
-    pub async fn send_command<H>(&mut self, command: H) -> Result<AGIResponse<H::Response>, AGIError>
-        where H: AGICommand
+    pub async fn send_command<H>(
+        &mut self,
+        command: H,
+    ) -> Result<AGIResponse<H::Response>, AGIError>
+    where
+        H: AGICommand,
     {
         let string_to_send = command.to_string();
         // send the command over the stream
@@ -49,8 +53,11 @@ impl Connection {
     }
 
     /// Parse an AGI message, assuming that is is a response to Command `H`.
-    fn agi_response_as_specialized_status<H>(message: AGIMessage) -> Result<AGIResponse<H::Response>, AGIError>
-        where H: AGICommand
+    fn agi_response_as_specialized_status<H>(
+        message: AGIMessage,
+    ) -> Result<AGIResponse<H::Response>, AGIError>
+    where
+        H: AGICommand,
     {
         // Get the response and return it
         let status = match message {
@@ -60,9 +67,11 @@ impl Connection {
         match status {
             AGIStatusGeneric::Ok(ref result, ref op_data) => {
                 let status_specialized = H::Response::try_from((result, op_data.as_deref()))
-                    .map_err(|e| AGIError::AGIStatusUnspecializable(status, e.response_to_command))?;
+                    .map_err(|e| {
+                        AGIError::AGIStatusUnspecializable(status, e.response_to_command)
+                    })?;
                 Ok(AGIResponse::Ok(status_specialized))
-            },
+            }
             AGIStatusGeneric::Invalid => Ok(AGIResponse::Invalid),
             AGIStatusGeneric::DeadChannel => Ok(AGIResponse::DeadChannel),
             AGIStatusGeneric::EndUsage => Ok(AGIResponse::EndUsage),
@@ -87,35 +96,55 @@ impl Connection {
     }
 }
 
-
 #[cfg(test)]
 mod test {
-    use crate::command::{answer::{Answer, AnswerResponse}, get_full_variable::{GetFullVariable, ThisChannel}, verbose::Verbose, SetVariable};
+    use crate::command::{
+        answer::{Answer, AnswerResponse},
+        get_full_variable::{GetFullVariable, ThisChannel},
+        verbose::Verbose,
+        SetVariable,
+    };
 
     use super::*;
 
     #[test]
     fn parse_answer_response() {
-        let response_body = AGIMessage::Status(AGIStatusGeneric::Ok("-1".to_string(), Some("did not work".to_string())));
-        assert_eq!( Connection::agi_response_as_specialized_status::<Answer>(response_body).unwrap(), AGIResponse::Ok(AnswerResponse::Failure));
+        let response_body = AGIMessage::Status(AGIStatusGeneric::Ok(
+            "-1".to_string(),
+            Some("did not work".to_string()),
+        ));
+        assert_eq!(
+            Connection::agi_response_as_specialized_status::<Answer>(response_body).unwrap(),
+            AGIResponse::Ok(AnswerResponse::Failure)
+        );
     }
 
     #[test]
     fn parse_verbose_response() {
-        let response_body = AGIMessage::Status(AGIStatusGeneric::Ok("1".to_string(), Some("".to_string())));
-        assert_eq!( Connection::agi_response_as_specialized_status::<Verbose>(response_body).unwrap(), AGIResponse::Ok(command::verbose::VerboseResponse { }));
+        let response_body =
+            AGIMessage::Status(AGIStatusGeneric::Ok("1".to_string(), Some("".to_string())));
+        assert_eq!(
+            Connection::agi_response_as_specialized_status::<Verbose>(response_body).unwrap(),
+            AGIResponse::Ok(command::verbose::VerboseResponse {})
+        );
     }
 
     #[test]
     fn parse_get_full_variable_incorrect() {
         let response_body = AGIMessage::Status(AGIStatusGeneric::Ok("2".to_string(), None));
-        assert!( Connection::agi_response_as_specialized_status::<GetFullVariable<ThisChannel>>(response_body).is_err());
+        assert!(
+            Connection::agi_response_as_specialized_status::<GetFullVariable<ThisChannel>>(
+                response_body
+            )
+            .is_err()
+        );
     }
 
     #[test]
     fn set_variable_response_success() {
         let response_body = AGIMessage::Status(AGIStatusGeneric::Ok("0".to_string(), None));
-        assert!( Connection::agi_response_as_specialized_status::<SetVariable>(response_body).is_err());
+        assert!(
+            Connection::agi_response_as_specialized_status::<SetVariable>(response_body).is_err()
+        );
     }
 }
-
