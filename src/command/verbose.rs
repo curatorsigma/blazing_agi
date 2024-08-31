@@ -1,4 +1,4 @@
-//! Implement the `VERBOSE` AGI command.
+//! Defines the `VERBOSE` AGI command.
 //! See also the [official documentation](https://docs.asterisk.org/Asterisk_22_Documentation/API_Documentation/AGI_Commands/verbose/)
 use super::*;
 
@@ -7,9 +7,9 @@ use super::*;
 /// Send a message to asterisk debugging.
 /// ```
 /// use blazing_agi::command::Verbose;
-/// let cmd = Verbose::new();
+/// let cmd = Verbose::new("Send this message".to_string());
 /// // Will send:
-/// assert_eq!(cmd.to_string(), "Verbose\n")
+/// assert_eq!(cmd.to_string(), "VERBOSE \"Send this message\"\n")
 /// ```
 ///
 /// The associated [`InnerAGIResponse`] from [`send_command`](crate::connection::Connection::send_command) is

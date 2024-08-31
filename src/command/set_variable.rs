@@ -1,4 +1,4 @@
-//! Implement the `SET VARIABLE` AGI command.
+//! Defines the `SET VARIABLE` AGI command.
 //! See also the [official documentation](https://docs.asterisk.org/Asterisk_22_Documentation/API_Documentation/AGI_Commands/get_full_variable/)
 use super::*;
 
@@ -12,7 +12,7 @@ use super::*;
 /// assert_eq!(cmd.to_string(), "SET VARIABLE \"TheVariable\" \"TheValue\"\n")
 /// ```
 ///
-/// The associated response from [`send_command`](crate::connection::Connection::send_command) is
+/// The associated [`InnerAGIResponse`] from [`send_command`](crate::connection::Connection::send_command) is
 /// [`SetVariableResponse`].
 #[derive(Debug)]
 pub struct SetVariable {

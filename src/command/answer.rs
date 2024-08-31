@@ -14,7 +14,7 @@ use super::*;
 /// assert_eq!(cmd.to_string(), "ANSWER\n")
 /// ```
 ///
-/// The associated response from [`send_command`](crate::connection::Connection::send_command) is
+/// The associated [`InnerAGIResponse`] from [`send_command`](crate::connection::Connection::send_command) is
 /// [`AnswerResponse`].
 #[derive(Debug)]
 pub struct Answer {}

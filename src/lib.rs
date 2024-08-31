@@ -1,7 +1,6 @@
 use std::collections::HashMap;
 
 use agiparse::{AGIMessage, AGIParseError, AGIStatusGeneric, AGIVariableDump};
-use command::{AGIResponse, InnerAGIResponse};
 use connection::Connection;
 use handler::AGIHandler;
 

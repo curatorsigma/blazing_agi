@@ -34,7 +34,7 @@ impl TargetChannel for OtherChannel {}
 /// assert_eq!(cmd.to_string(), "GET FULL VARIABLE \"TheExpression\" \"TheChannel\"\n")
 /// ```
 ///
-/// The associated response from [`send_command`](crate::connection::Connection::send_command) is
+/// The associated [`InnerAGIResponse`] from [`send_command`](crate::connection::Connection::send_command) is
 /// [`GetFullVariableResponse`].
 #[derive(Debug,PartialEq)]
 pub struct GetFullVariable<S: TargetChannel> {

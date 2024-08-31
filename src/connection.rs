@@ -5,7 +5,7 @@ use tracing::Level;
 use crate::*;
 
 use self::agiparse::{AGIMessage, AGIParseError, AGIStatusGeneric};
-use self::command::{AGICommand, AGIResponse};
+use crate::command::{AGICommand, AGIResponse};
 
 #[derive(Debug)]
 pub struct Connection {
@@ -13,7 +13,7 @@ pub struct Connection {
     stream: TcpStream,
 }
 impl Connection {
-    pub fn new(stream: TcpStream) -> Connection {
+    pub(crate) fn new(stream: TcpStream) -> Connection {
         Connection {
             buf: [0; 1024],
             stream,
