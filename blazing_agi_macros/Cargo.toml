@@ -2,7 +2,13 @@
 name = "blazing_agi_macros"
 version = "0.1.0"
 edition = "2021"
-
+license = "MIT-0"
+authors = ["Jonathan Schleucher"]
+description = "blazing_agi_macro is a companion crate to blazing_agi"
+repository = "https://github.com/curatorsigma/blazing_agi"
+keywords = ["agi","fastagi","asterisk"]
+categories = ["network-programming"]
+readme = "README.md"
 
 [lib]
 name = "blazing_agi_macros"
