@@ -26,7 +26,7 @@ async fn foo2(connection: &mut Connection, request: &AGIRequest) -> Result<(), A
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     // Create the router from the handlers you have defined
     let router = Router::new().route("/script", foo).route("/other", foo2);
-    let listener = TcpListener::bind("0.0.0.0:5473").await?;
+    let listener = TcpListener::bind("0.0.0.0:4573").await?;
     // Start serving the Router.
     serve::serve(listener, router).await?;
     Ok(())
