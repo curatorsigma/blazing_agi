@@ -82,7 +82,7 @@ impl Connection {
 
 #[cfg(test)]
 mod test {
-    use crate::command::answer::{Answer, AnswerResponse};
+    use crate::command::{answer::{Answer, AnswerResponse}, verbose::Verbose};
 
     use super::*;
 
@@ -90,6 +90,12 @@ mod test {
     fn parse_answer_response() {
         let response_body = AGIMessage::Status(AGIStatusGeneric::Ok("-1".to_string(), Some("did not work".to_string())));
         assert_eq!( Connection::agi_response_as_specialized_status::<Answer>(response_body).unwrap(), AGIResponse::Ok(AnswerResponse::Failure));
+    }
+
+    #[test]
+    fn parse_verbose_response() {
+        let response_body = AGIMessage::Status(AGIStatusGeneric::Ok("1".to_string(), Some("".to_string())));
+        assert_eq!( Connection::agi_response_as_specialized_status::<Verbose>(response_body).unwrap(), AGIResponse::Ok(command::verbose::VerboseResponse { }));
     }
 }
 
