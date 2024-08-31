@@ -16,13 +16,13 @@ pub struct GetFullVariable<S: ChannelSet> {
     channel_name: S,
 }
 impl GetFullVariable<NotSet> {
-    pub fn new<S: AsRef<str>>(s: S) -> Self {
-        Self { expression: s.as_ref().to_string(), channel_name: NotSet {} }
+    pub fn new(s: String) -> Self {
+        Self { expression: s, channel_name: NotSet {} }
     }
 }
 impl GetFullVariable<NotSet> {
-    pub fn with_channel<S: AsRef<str>>(self, s: S) -> GetFullVariable<Set> {
-        GetFullVariable::<Set> { expression: self.expression, channel_name: Set{ channel_name: s.as_ref().to_string() }}
+    pub fn with_channel(self, s: String) -> GetFullVariable<Set> {
+        GetFullVariable::<Set> { expression: self.expression, channel_name: Set{ channel_name: s }}
     }
 }
 
@@ -80,13 +80,13 @@ mod test {
 
     #[test]
     fn run_empty_channel() {
-        let answer = GetFullVariable::new("TEST_VAR_NAME");
+        let answer = GetFullVariable::new("TEST_VAR_NAME".to_string());
         assert_eq!(answer.to_string(), "GET FULL VARIABLE \"TEST_VAR_NAME\"\n");
     }
 
     #[test]
     fn run_non_empty_channel() {
-        let answer = GetFullVariable::new("TEST_VAR_NAME").with_channel("The-Channel");
+        let answer = GetFullVariable::new("TEST_VAR_NAME".to_string()).with_channel("The-Channel".to_string());
         assert_eq!(answer.to_string(), "GET FULL VARIABLE \"TEST_VAR_NAME\" \"The-Channel\"\n");
     }
 
