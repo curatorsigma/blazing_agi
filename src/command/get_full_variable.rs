@@ -27,9 +27,9 @@ impl TargetChannel for OtherChannel {}
 /// ```
 /// use blazing_agi::command::GetFullVariable;
 /// # use blazing_agi::command::get_full_variable::OtherChannel;
-/// let cmd = GetFullVariable::new("TheExpression".to_string())
+/// let cmd = GetFullVariable::new("TheExpression".to_owned())
 ///     // optional
-///     .with_channel("TheChannel".to_string());
+///     .with_channel("TheChannel".to_owned());
 /// // Will send:
 /// assert_eq!(cmd.to_string(), "GET FULL VARIABLE \"TheExpression\" \"TheChannel\"\n")
 /// ```
@@ -104,19 +104,19 @@ impl<'a> TryFrom<(&'a str, Option<&'a str>)> for GetFullVariableResponse {
                 Some(x) => {
                     let op_data_trimmed = x.trim_matches(|c| c == '(' || c == ')');
                     Ok(GetFullVariableResponse {
-                        value: Some(op_data_trimmed.to_string()),
+                        value: Some(op_data_trimmed.to_owned()),
                     })
                 }
                 None => Err(AGIStatusParseError {
-                    result: result.to_string(),
+                    result: result.to_owned(),
                     op_data: None,
                     response_to_command: "GET FULL VARIABLE",
                 }),
             },
             Ok(0) => Ok(GetFullVariableResponse { value: None }),
             _ => Err(AGIStatusParseError {
-                result: result.to_string(),
-                op_data: op_data.map(|x| x.to_string()),
+                result: result.to_owned(),
+                op_data: op_data.map(|x| x.to_owned()),
                 response_to_command: "GET FULL VARIABLE",
             }),
         }
@@ -129,14 +129,14 @@ mod test {
 
     #[test]
     fn run_empty_channel() {
-        let answer = GetFullVariable::new("TEST_VAR_NAME".to_string());
+        let answer = GetFullVariable::new("TEST_VAR_NAME".to_owned());
         assert_eq!(answer.to_string(), "GET FULL VARIABLE \"TEST_VAR_NAME\"\n");
     }
 
     #[test]
     fn run_non_empty_channel() {
-        let answer = GetFullVariable::new("TEST_VAR_NAME".to_string())
-            .with_channel("The-Channel".to_string());
+        let answer = GetFullVariable::new("TEST_VAR_NAME".to_owned())
+            .with_channel("The-Channel".to_owned());
         assert_eq!(
             answer.to_string(),
             "GET FULL VARIABLE \"TEST_VAR_NAME\" \"The-Channel\"\n"
@@ -148,7 +148,7 @@ mod test {
         assert_eq!(
             GetFullVariableResponse::try_from(("1", Some("TheResult"))).unwrap(),
             GetFullVariableResponse {
-                value: Some("TheResult".to_string())
+                value: Some("TheResult".to_owned())
             }
         );
     }
@@ -166,8 +166,8 @@ mod test {
         assert_eq!(
             GetFullVariableResponse::try_from(("-1", Some("irrelevant stuff"))),
             Err(AGIStatusParseError {
-                result: "-1".to_string(),
-                op_data: Some("irrelevant stuff".to_string()),
+                result: "-1".to_owned(),
+                op_data: Some("irrelevant stuff".to_owned()),
                 response_to_command: "GET FULL VARIABLE"
             })
         );

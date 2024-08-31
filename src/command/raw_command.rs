@@ -10,7 +10,7 @@ use super::*;
 /// implemented.
 /// ```
 /// use blazing_agi::command::RawCommand;
-/// let cmd = RawCommand::new("GET DATA /some/file 10 7".to_string());
+/// let cmd = RawCommand::new("GET DATA /some/file 10 7".to_owned());
 /// // Will send (the \n simply terminates the command for asterisks parser):
 /// assert_eq!(cmd.to_string(), "GET DATA /some/file 10 7\n")
 /// ```
@@ -56,7 +56,7 @@ impl InnerAGIResponse for RawCommandResponse {}
 impl<'a> TryFrom<(&'a str, Option<&'a str>)> for RawCommandResponse {
     type Error = AGIStatusParseError;
     fn try_from((result, op_data): (&str, Option<&str>)) -> Result<Self, Self::Error> {
-        Ok(RawCommandResponse { result: result.to_string(), op_data: op_data.map(|x| x.to_string())})
+        Ok(RawCommandResponse { result: result.to_owned(), op_data: op_data.map(|x| x.to_owned())})
     }
 }
 
@@ -66,7 +66,7 @@ mod test {
 
     #[test]
     fn run_command() {
-        let answer = RawCommand::new("SAY DIGITS 1425 07".to_string());
+        let answer = RawCommand::new("SAY DIGITS 1425 07".to_owned());
         assert_eq!(
             answer.to_string(),
             "SAY DIGITS 1425 07\n"
@@ -77,7 +77,7 @@ mod test {
     fn parse_raw() {
         assert_eq!(
             RawCommandResponse::try_from(("0", Some("(stuff)"))).unwrap(),
-            RawCommandResponse { result: "0".to_string(), op_data: Some("(stuff)".to_string())}
+            RawCommandResponse { result: "0".to_owned(), op_data: Some("(stuff)".to_owned())}
         );
     }
 }

@@ -147,17 +147,17 @@ impl FromStr for AGIStatusGeneric {
         let mut splitline = s.trim_end().split(' ');
         let code = splitline
             .next()
-            .ok_or(AGIParseError::NoStatusCode(s.to_string()))?
+            .ok_or(AGIParseError::NoStatusCode(s.to_owned()))?
             .parse::<u16>()
-            .map_err(|_| AGIParseError::StatusCodeUnparsable(s.to_string()))?;
+            .map_err(|_| AGIParseError::StatusCodeUnparsable(s.to_owned()))?;
         let result_part = splitline
             .next()
-            .ok_or(AGIParseError::NoResult(s.to_string()))?;
+            .ok_or(AGIParseError::NoResult(s.to_owned()))?;
         if !result_part.starts_with("result=") {
-            return Err(AGIParseError::ResultUnparsable(s.to_string()));
+            return Err(AGIParseError::ResultUnparsable(s.to_owned()));
         }
-        let result = result_part[7..].to_string();
-        let operational_data = splitline.next().map(|x| x.to_string());
+        let result = result_part[7..].to_owned();
+        let operational_data = splitline.next().map(|x| x.to_owned());
         match code {
             200 => Ok(AGIStatusGeneric::Ok(result, operational_data)),
             510 => Ok(AGIStatusGeneric::Invalid),
@@ -209,7 +209,7 @@ fn enhanced_status(input: &str) -> Result<bool, AGIParseError> {
     if input == "1.0" {
         return Ok(true);
     }
-    return Err(AGIParseError::EnhancedUnparsable(input.to_string()));
+    return Err(AGIParseError::EnhancedUnparsable(input.to_owned()));
 }
 
 /// The VariableDump (i.e. an AGI request). This is the second packet asterisk sends, after an
@@ -320,90 +320,90 @@ impl FromStr for AGIVariableDump {
             };
             let value = name_value
                 .next()
-                .ok_or(AGIParseError::NoValue(line.to_string()))?
+                .ok_or(AGIParseError::NoValue(line.to_owned()))?
                 .trim_end();
             match name.expect("Should have been checked with is_none") {
                 "agi_network_script" => {
-                    network_script = Some(value.to_string());
+                    network_script = Some(value.to_owned());
                 }
                 "agi_request" => {
                     request = Some(value.parse()?);
                 }
                 "agi_channel" => {
-                    channel = Some(value.to_string());
+                    channel = Some(value.to_owned());
                 }
                 "agi_language" => {
-                    language = Some(value.to_string());
+                    language = Some(value.to_owned());
                 }
                 "agi_type" => {
-                    channel_type = Some(value.to_string());
+                    channel_type = Some(value.to_owned());
                 }
                 "agi_uniqueid" => {
-                    uniqueid = Some(value.to_string());
+                    uniqueid = Some(value.to_owned());
                 }
                 "agi_version" => {
-                    version = Some(value.to_string());
+                    version = Some(value.to_owned());
                 }
                 "agi_callerid" => {
-                    callerid = Some(value.to_string());
+                    callerid = Some(value.to_owned());
                 }
                 "agi_calleridname" => {
-                    calleridname = Some(value.to_string());
+                    calleridname = Some(value.to_owned());
                 }
                 "agi_callingpres" => {
-                    callingpres = Some(value.to_string());
+                    callingpres = Some(value.to_owned());
                 }
                 "agi_callingani2" => {
-                    callingani2 = Some(value.to_string());
+                    callingani2 = Some(value.to_owned());
                 }
                 "agi_callington" => {
-                    callington = Some(value.to_string());
+                    callington = Some(value.to_owned());
                 }
                 "agi_callingtns" => {
-                    callingtns = Some(value.to_string());
+                    callingtns = Some(value.to_owned());
                 }
                 "agi_dnid" => {
-                    dnid = Some(value.to_string());
+                    dnid = Some(value.to_owned());
                 }
                 "agi_rdnis" => {
-                    rdnis = Some(value.to_string());
+                    rdnis = Some(value.to_owned());
                 }
                 "agi_context" => {
-                    context = Some(value.to_string());
+                    context = Some(value.to_owned());
                 }
                 "agi_extension" => {
-                    extension = Some(value.to_string());
+                    extension = Some(value.to_owned());
                 }
                 "agi_priority" => {
                     priority = Some(
                         value
                             .parse()
-                            .map_err(|_| AGIParseError::PriorityUnparsable(value.to_string()))?,
+                            .map_err(|_| AGIParseError::PriorityUnparsable(value.to_owned()))?,
                     );
                 }
                 "agi_enhanced" => {
                     enhanced = Some(enhanced_status(value)?);
                 }
                 "agi_accountcode" => {
-                    accountcode = Some(value.to_string());
+                    accountcode = Some(value.to_owned());
                 }
                 "agi_threadid" => {
                     threadid = Some(
                         value
                             .parse()
-                            .map_err(|_| AGIParseError::ThreadIdUnparsable(value.to_string()))?,
+                            .map_err(|_| AGIParseError::ThreadIdUnparsable(value.to_owned()))?,
                     );
                 }
                 m => {
                     // custom args of the format
                     // agi_arg_n: value
                     if !m.starts_with("agi_arg_") {
-                        return Err(AGIParseError::UnknownArg(m.to_string()));
+                        return Err(AGIParseError::UnknownArg(m.to_owned()));
                     }
                     // at which position do we need to insert the value?
                     let custom_arg_number = &m[8..]
                         .parse::<u8>()
-                        .map_err(|_| AGIParseError::CustomArgNumberUnparsable(m.to_string()))?;
+                        .map_err(|_| AGIParseError::CustomArgNumberUnparsable(m.to_owned()))?;
                     match custom_args {
                         // start with the value inserted at the correct position
                         None => {
@@ -411,13 +411,13 @@ impl FromStr for AGIVariableDump {
                             custom_args
                                 .as_mut()
                                 .expect("Value should have been set to Some in the last statement")
-                                .insert(*custom_arg_number, value.to_string());
+                                .insert(*custom_arg_number, value.to_owned());
                         }
                         Some(ref mut x) => {
                             if x.contains_key(custom_arg_number) {
-                                return Err(AGIParseError::DuplicateCustomArg(m.to_string()));
+                                return Err(AGIParseError::DuplicateCustomArg(m.to_owned()));
                             }
-                            x.insert(*custom_arg_number, value.to_string());
+                            x.insert(*custom_arg_number, value.to_owned());
                         }
                     }
                 }
@@ -426,34 +426,34 @@ impl FromStr for AGIVariableDump {
         // actually build the resulting dump and return it
         Ok(AGIVariableDump {
             network_script: network_script
-                .ok_or(AGIParseError::VariableMissing("network_script".to_string()))?,
-            request: request.ok_or(AGIParseError::VariableMissing("request".to_string()))?,
-            channel: channel.ok_or(AGIParseError::VariableMissing("channel".to_string()))?,
-            language: language.ok_or(AGIParseError::VariableMissing("language".to_string()))?,
+                .ok_or(AGIParseError::VariableMissing("network_script".to_owned()))?,
+            request: request.ok_or(AGIParseError::VariableMissing("request".to_owned()))?,
+            channel: channel.ok_or(AGIParseError::VariableMissing("channel".to_owned()))?,
+            language: language.ok_or(AGIParseError::VariableMissing("language".to_owned()))?,
             channel_type: channel_type
-                .ok_or(AGIParseError::VariableMissing("channel_type".to_string()))?,
-            uniqueid: uniqueid.ok_or(AGIParseError::VariableMissing("uniqueid".to_string()))?,
-            version: version.ok_or(AGIParseError::VariableMissing("version".to_string()))?,
-            callerid: callerid.ok_or(AGIParseError::VariableMissing("callerid".to_string()))?,
+                .ok_or(AGIParseError::VariableMissing("channel_type".to_owned()))?,
+            uniqueid: uniqueid.ok_or(AGIParseError::VariableMissing("uniqueid".to_owned()))?,
+            version: version.ok_or(AGIParseError::VariableMissing("version".to_owned()))?,
+            callerid: callerid.ok_or(AGIParseError::VariableMissing("callerid".to_owned()))?,
             calleridname: calleridname
-                .ok_or(AGIParseError::VariableMissing("calleridname".to_string()))?,
+                .ok_or(AGIParseError::VariableMissing("calleridname".to_owned()))?,
             callingpres: callingpres
-                .ok_or(AGIParseError::VariableMissing("callingpres".to_string()))?,
+                .ok_or(AGIParseError::VariableMissing("callingpres".to_owned()))?,
             callingani2: callingani2
-                .ok_or(AGIParseError::VariableMissing("callingani2".to_string()))?,
+                .ok_or(AGIParseError::VariableMissing("callingani2".to_owned()))?,
             callington: callington
-                .ok_or(AGIParseError::VariableMissing("callington".to_string()))?,
+                .ok_or(AGIParseError::VariableMissing("callington".to_owned()))?,
             callingtns: callingtns
-                .ok_or(AGIParseError::VariableMissing("callingtns".to_string()))?,
-            dnid: dnid.ok_or(AGIParseError::VariableMissing("dnid".to_string()))?,
-            rdnis: rdnis.ok_or(AGIParseError::VariableMissing("rdnis".to_string()))?,
-            context: context.ok_or(AGIParseError::VariableMissing("context".to_string()))?,
-            extension: extension.ok_or(AGIParseError::VariableMissing("extension".to_string()))?,
-            priority: priority.ok_or(AGIParseError::VariableMissing("priority".to_string()))?,
-            enhanced: enhanced.ok_or(AGIParseError::VariableMissing("enhanced".to_string()))?,
+                .ok_or(AGIParseError::VariableMissing("callingtns".to_owned()))?,
+            dnid: dnid.ok_or(AGIParseError::VariableMissing("dnid".to_owned()))?,
+            rdnis: rdnis.ok_or(AGIParseError::VariableMissing("rdnis".to_owned()))?,
+            context: context.ok_or(AGIParseError::VariableMissing("context".to_owned()))?,
+            extension: extension.ok_or(AGIParseError::VariableMissing("extension".to_owned()))?,
+            priority: priority.ok_or(AGIParseError::VariableMissing("priority".to_owned()))?,
+            enhanced: enhanced.ok_or(AGIParseError::VariableMissing("enhanced".to_owned()))?,
             accountcode: accountcode
-                .ok_or(AGIParseError::VariableMissing("accountcode".to_string()))?,
-            threadid: threadid.ok_or(AGIParseError::VariableMissing("threadid".to_string()))?,
+                .ok_or(AGIParseError::VariableMissing("accountcode".to_owned()))?,
+            threadid: threadid.ok_or(AGIParseError::VariableMissing("threadid".to_owned()))?,
             custom_args: custom_args.unwrap_or(HashMap::<u8, String>::new()),
         })
     }
@@ -536,32 +536,32 @@ mod tests {
             agi_arg_3: arg3\n\n\0\0\0";
         let vardump = message.parse::<AGIVariableDump>().unwrap();
         let mut arghashmap = HashMap::new();
-        arghashmap.insert(1u8, "arg1".to_string());
-        arghashmap.insert(2u8, "arg2".to_string());
-        arghashmap.insert(3u8, "arg3".to_string());
+        arghashmap.insert(1u8, "arg1".to_owned());
+        arghashmap.insert(2u8, "arg2".to_owned());
+        arghashmap.insert(3u8, "arg3".to_owned());
         assert_eq!(
             vardump,
             AGIVariableDump {
-                network_script: "agi.sh".to_string(),
+                network_script: "agi.sh".to_owned(),
                 request: AGIRequestType::File(PathBuf::from("/tmp/agi.sh"),),
-                channel: "SIP/marcelog-e00d2760".to_string(),
-                language: "ar".to_string(),
-                channel_type: "SIP".to_string(),
-                uniqueid: "1297542965.8".to_string(),
-                version: "1.6.0.9".to_string(),
-                callerid: "marcelog".to_string(),
-                calleridname: "marcelog@mg".to_string(),
-                callingpres: "0".to_string(),
-                callingani2: "0".to_string(),
-                callington: "0".to_string(),
-                callingtns: "0".to_string(),
-                dnid: "667".to_string(),
-                rdnis: "unknown".to_string(),
-                context: "default".to_string(),
-                extension: "667".to_string(),
+                channel: "SIP/marcelog-e00d2760".to_owned(),
+                language: "ar".to_owned(),
+                channel_type: "SIP".to_owned(),
+                uniqueid: "1297542965.8".to_owned(),
+                version: "1.6.0.9".to_owned(),
+                callerid: "marcelog".to_owned(),
+                calleridname: "marcelog@mg".to_owned(),
+                callingpres: "0".to_owned(),
+                callingani2: "0".to_owned(),
+                callington: "0".to_owned(),
+                callingtns: "0".to_owned(),
+                dnid: "667".to_owned(),
+                rdnis: "unknown".to_owned(),
+                context: "default".to_owned(),
+                extension: "667".to_owned(),
                 priority: 2,
                 enhanced: false,
-                accountcode: "".to_string(),
+                accountcode: "".to_owned(),
                 threadid: 1104922960,
                 custom_args: arghashmap,
             }
@@ -595,26 +595,26 @@ mod tests {
         assert_eq!(
             vardump,
             AGIVariableDump {
-                network_script: "agi.sh".to_string(),
+                network_script: "agi.sh".to_owned(),
                 request: AGIRequestType::File(PathBuf::from("/tmp/agi.sh"),),
-                channel: "SIP/marcelog-e00d2760".to_string(),
-                language: "ar".to_string(),
-                channel_type: "SIP".to_string(),
-                uniqueid: "1297542965.8".to_string(),
-                version: "1.6.0.9".to_string(),
-                callerid: "marcelog".to_string(),
-                calleridname: "marcelog@mg".to_string(),
-                callingpres: "0".to_string(),
-                callingani2: "0".to_string(),
-                callington: "0".to_string(),
-                callingtns: "0".to_string(),
-                dnid: "667".to_string(),
-                rdnis: "unknown".to_string(),
-                context: "default".to_string(),
-                extension: "667".to_string(),
+                channel: "SIP/marcelog-e00d2760".to_owned(),
+                language: "ar".to_owned(),
+                channel_type: "SIP".to_owned(),
+                uniqueid: "1297542965.8".to_owned(),
+                version: "1.6.0.9".to_owned(),
+                callerid: "marcelog".to_owned(),
+                calleridname: "marcelog@mg".to_owned(),
+                callingpres: "0".to_owned(),
+                callingani2: "0".to_owned(),
+                callington: "0".to_owned(),
+                callingtns: "0".to_owned(),
+                dnid: "667".to_owned(),
+                rdnis: "unknown".to_owned(),
+                context: "default".to_owned(),
+                extension: "667".to_owned(),
                 priority: 2,
                 enhanced: false,
-                accountcode: "".to_string(),
+                accountcode: "".to_owned(),
                 threadid: 1104922960,
                 custom_args: HashMap::<u8, String>::new(),
             }
@@ -680,8 +680,8 @@ mod tests {
         assert_eq!(
             line.parse::<AGIStatusGeneric>(),
             Ok(AGIStatusGeneric::Ok(
-                "1".to_string(),
-                Some("done".to_string())
+                "1".to_owned(),
+                Some("done".to_owned())
             ))
         );
     }
@@ -691,7 +691,7 @@ mod tests {
         let line = "200 result=1 \n";
         assert_eq!(
             line.parse::<AGIStatusGeneric>(),
-            Ok(AGIStatusGeneric::Ok("1".to_string(), None))
+            Ok(AGIStatusGeneric::Ok("1".to_owned(), None))
         );
     }
 
@@ -725,8 +725,8 @@ mod tests {
         assert_eq!(
             message.parse::<AGIMessage>(),
             Ok(AGIMessage::Status(AGIStatusGeneric::Ok(
-                "1".to_string(),
-                Some("done".to_string())
+                "1".to_owned(),
+                Some("done".to_owned())
             )))
         );
     }
@@ -759,26 +759,26 @@ mod tests {
         assert_eq!(
             vardump,
             AGIMessage::VariableDump(AGIVariableDump {
-                network_script: "agi.sh".to_string(),
+                network_script: "agi.sh".to_owned(),
                 request: AGIRequestType::File(PathBuf::from("/tmp/agi.sh"),),
-                channel: "SIP/marcelog-e00d2760".to_string(),
-                language: "ar".to_string(),
-                channel_type: "SIP".to_string(),
-                uniqueid: "1297542965.8".to_string(),
-                version: "1.6.0.9".to_string(),
-                callerid: "marcelog".to_string(),
-                calleridname: "marcelog@mg".to_string(),
-                callingpres: "0".to_string(),
-                callingani2: "0".to_string(),
-                callington: "0".to_string(),
-                callingtns: "0".to_string(),
-                dnid: "667".to_string(),
-                rdnis: "unknown".to_string(),
-                context: "default".to_string(),
-                extension: "667".to_string(),
+                channel: "SIP/marcelog-e00d2760".to_owned(),
+                language: "ar".to_owned(),
+                channel_type: "SIP".to_owned(),
+                uniqueid: "1297542965.8".to_owned(),
+                version: "1.6.0.9".to_owned(),
+                callerid: "marcelog".to_owned(),
+                calleridname: "marcelog@mg".to_owned(),
+                callingpres: "0".to_owned(),
+                callingani2: "0".to_owned(),
+                callington: "0".to_owned(),
+                callingtns: "0".to_owned(),
+                dnid: "667".to_owned(),
+                rdnis: "unknown".to_owned(),
+                context: "default".to_owned(),
+                extension: "667".to_owned(),
                 priority: 2,
                 enhanced: false,
-                accountcode: "".to_string(),
+                accountcode: "".to_owned(),
                 threadid: 1104922960,
                 custom_args: HashMap::<u8, String>::new(),
             })

@@ -7,7 +7,7 @@ use super::*;
 /// Use with
 /// ```
 /// use blazing_agi::command::SetVariable;
-/// let cmd = SetVariable::new("TheVariable".to_string(), "TheValue".to_string());
+/// let cmd = SetVariable::new("TheVariable".to_owned(), "TheValue".to_owned());
 /// // Will send:
 /// assert_eq!(cmd.to_string(), "SET VARIABLE \"TheVariable\" \"TheValue\"\n")
 /// ```
@@ -48,8 +48,8 @@ impl<'a> TryFrom<(&'a str, Option<&'a str>)> for SetVariableResponse {
         match res_parsed {
             Ok(1) => Ok(SetVariableResponse {}),
             _ => Err(AGIStatusParseError {
-                result: result.to_string(),
-                op_data: op_data.map(|x| x.to_string()),
+                result: result.to_owned(),
+                op_data: op_data.map(|x| x.to_owned()),
                 response_to_command: "SET VARIABLE",
             }),
         }
@@ -62,7 +62,7 @@ mod test {
 
     #[test]
     fn run_normal_set() {
-        let cmd = SetVariable::new("TEST_VAR_NAME".to_string(), "the-value".to_string());
+        let cmd = SetVariable::new("TEST_VAR_NAME".to_owned(), "the-value".to_owned());
         assert_eq!(
             cmd.to_string(),
             "SET VARIABLE \"TEST_VAR_NAME\" \"the-value\"\n"
@@ -82,8 +82,8 @@ mod test {
         assert_eq!(
             SetVariableResponse::try_from(("0", Some("other stuff"))),
             Err(AGIStatusParseError {
-                result: "0".to_string(),
-                op_data: Some("other stuff".to_string()),
+                result: "0".to_owned(),
+                op_data: Some("other stuff".to_owned()),
                 response_to_command: "SET VARIABLE"
             })
         );

@@ -7,7 +7,7 @@ use super::*;
 /// Send a message to asterisk debugging.
 /// ```
 /// use blazing_agi::command::Verbose;
-/// let cmd = Verbose::new("Send this message".to_string());
+/// let cmd = Verbose::new("Send this message".to_owned());
 /// // Will send:
 /// assert_eq!(cmd.to_string(), "VERBOSE \"Send this message\"\n")
 /// ```
@@ -46,8 +46,8 @@ impl<'a> TryFrom<(&'a str, Option<&'a str>)> for VerboseResponse {
         match res_parsed {
             Ok(1) => Ok(VerboseResponse {}),
             _ => Err(AGIStatusParseError {
-                result: result.to_string(),
-                op_data: op_data.map(|x| x.to_string()),
+                result: result.to_owned(),
+                op_data: op_data.map(|x| x.to_owned()),
                 response_to_command: "VERBOSE",
             }),
         }
@@ -60,13 +60,13 @@ mod test {
 
     #[test]
     fn run_empty_message() {
-        let answer = Verbose::new("".to_string());
+        let answer = Verbose::new("".to_owned());
         assert_eq!(answer.to_string(), "VERBOSE \"\"\n");
     }
 
     #[test]
     fn run_non_empty_message() {
-        let answer = Verbose::new("I am the debug output in asterisk".to_string());
+        let answer = Verbose::new("I am the debug output in asterisk".to_owned());
         assert_eq!(
             answer.to_string(),
             "VERBOSE \"I am the debug output in asterisk\"\n"
@@ -86,8 +86,8 @@ mod test {
         assert_eq!(
             VerboseResponse::try_from(("0", Some("other stuff"))),
             Err(AGIStatusParseError {
-                result: "0".to_string(),
-                op_data: Some("other stuff".to_string()),
+                result: "0".to_owned(),
+                op_data: Some("other stuff".to_owned()),
                 response_to_command: "VERBOSE"
             })
         );

@@ -77,7 +77,7 @@ impl AGIHandler for FallbackHandler {
     #[tracing::instrument(level=Level::DEBUG, ret, err)]
     async fn handle(&self, connection: &mut Connection, _: &AGIRequest) -> Result<(), AGIError> {
         connection
-            .send_command(Verbose::new("Route not found".to_string()))
+            .send_command(Verbose::new("Route not found".to_owned()))
             .await?;
         Ok(())
     }

@@ -9,7 +9,7 @@
 //!
 //! # async fn main() -> Result<(), AGIError> {
 //! // Create the appropriate Command
-//! let cmd = SetVariable::new("VarName".to_string(), "Value".to_string());
+//! let cmd = SetVariable::new("VarName".to_owned(), "Value".to_owned());
 //! // and send it over a connection
 //! let conn: blazing_agi::connection::Connection = todo!();
 //! let res = conn.send_command(cmd).await;

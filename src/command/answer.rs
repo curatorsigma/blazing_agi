@@ -54,8 +54,8 @@ impl<'a> TryFrom<(&'a str, Option<&'a str>)> for AnswerResponse {
             Ok(0) => Ok(AnswerResponse::Success),
             Ok(-1) => Ok(AnswerResponse::Failure),
             _ => Err(AGIStatusParseError {
-                result: result.to_string(),
-                op_data: op_data.map(|x| x.to_string()),
+                result: result.to_owned(),
+                op_data: op_data.map(|x| x.to_owned()),
                 response_to_command: "ANSWER",
             }),
         }
@@ -93,7 +93,7 @@ mod test {
         assert_eq!(
             AnswerResponse::try_from(("1", None)),
             Err(AGIStatusParseError {
-                result: "1".to_string(),
+                result: "1".to_owned(),
                 op_data: None,
                 response_to_command: "ANSWER"
             })

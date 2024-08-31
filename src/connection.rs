@@ -107,8 +107,8 @@ mod test {
     #[test]
     fn parse_answer_response() {
         let response_body = AGIMessage::Status(AGIStatusGeneric::Ok(
-            "-1".to_string(),
-            Some("did not work".to_string()),
+            "-1".to_owned(),
+            Some("did not work".to_owned()),
         ));
         assert_eq!(
             Connection::agi_response_as_specialized_status::<Answer>(response_body).unwrap(),
@@ -119,7 +119,7 @@ mod test {
     #[test]
     fn parse_verbose_response() {
         let response_body =
-            AGIMessage::Status(AGIStatusGeneric::Ok("1".to_string(), Some("".to_string())));
+            AGIMessage::Status(AGIStatusGeneric::Ok("1".to_owned(), Some("".to_owned())));
         assert_eq!(
             Connection::agi_response_as_specialized_status::<Verbose>(response_body).unwrap(),
             AGIResponse::Ok(command::verbose::VerboseResponse {})
@@ -128,7 +128,7 @@ mod test {
 
     #[test]
     fn parse_get_full_variable_incorrect() {
-        let response_body = AGIMessage::Status(AGIStatusGeneric::Ok("2".to_string(), None));
+        let response_body = AGIMessage::Status(AGIStatusGeneric::Ok("2".to_owned(), None));
         assert!(
             Connection::agi_response_as_specialized_status::<GetFullVariable<ThisChannel>>(
                 response_body
@@ -139,7 +139,7 @@ mod test {
 
     #[test]
     fn set_variable_response_success() {
-        let response_body = AGIMessage::Status(AGIStatusGeneric::Ok("0".to_string(), None));
+        let response_body = AGIMessage::Status(AGIStatusGeneric::Ok("0".to_owned(), None));
         assert!(
             Connection::agi_response_as_specialized_status::<SetVariable>(response_body).is_err()
         );
@@ -147,10 +147,10 @@ mod test {
 
     #[test]
     fn raw_command() {
-        let response_body = AGIMessage::Status(AGIStatusGeneric::Ok("1".to_string(), Some("stuff und so".to_string())));
+        let response_body = AGIMessage::Status(AGIStatusGeneric::Ok("1".to_owned(), Some("stuff und so".to_owned())));
         assert_eq!(
             Connection::agi_response_as_specialized_status::<RawCommand>(response_body).unwrap(),
-            AGIResponse::Ok(RawCommandResponse{ result: "1".to_string(), op_data: Some("stuff und so".to_string())})
+            AGIResponse::Ok(RawCommandResponse{ result: "1".to_owned(), op_data: Some("stuff und so".to_owned())})
         );
     }
 }

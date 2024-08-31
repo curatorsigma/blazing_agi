@@ -15,7 +15,7 @@
 //! // name)
 //! #[create_handler]
 //! async fn foo(connection: &mut Connection, request: &AGIRequest) -> Result<(), AGIError> {
-//!     connection.send_command(Verbose::new("Hello There".to_string())).await?;
+//!     connection.send_command(Verbose::new("Hello There".to_owned())).await?;
 //!     Ok(())
 //! }
 //!
