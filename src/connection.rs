@@ -1,3 +1,4 @@
+//! This module handles the literal network connection and sends/receives packets.
 use tokio::io::{AsyncReadExt, AsyncWriteExt};
 use tokio::net::TcpStream;
 use tracing::Level;
@@ -7,6 +8,8 @@ use crate::*;
 use self::agiparse::{AGIMessage, AGIParseError, AGIStatusGeneric};
 use crate::command::{AGICommand, AGIResponse};
 
+/// `Connection` handles a single AGI stream (a connection originating from a client).
+/// [`command`]s are sent with [`connection::Connection::send_command`](self::Connection::send_command)
 #[derive(Debug)]
 pub struct Connection {
     buf: [u8; 1024],
@@ -20,11 +23,13 @@ impl Connection {
         }
     }
 
-    /// Send an AGI Command over this connection
+    /// Send an AGI Command over this connection.
     ///
     /// Return an Error when sending fails or we do not get a Status message as a response.
     /// non-200 status codes are returned as Ok(the-status) and are NOT an Err as far as this
     /// method is concerned.
+    ///
+    /// Note that the precice return type depends on the command sent.
     #[tracing::instrument(level=Level::TRACE, ret, err)]
     pub async fn send_command<H>(&mut self, command: H) -> Result<AGIResponse<H::Response>, AGIError>
         where H: AGICommand
@@ -43,6 +48,7 @@ impl Connection {
         Self::agi_response_as_specialized_status::<H>(response)
     }
 
+    /// Parse an AGI message, assuming that is is a response to Command `H`.
     fn agi_response_as_specialized_status<H>(message: AGIMessage) -> Result<AGIResponse<H::Response>, AGIError>
         where H: AGICommand
     {
@@ -67,11 +73,13 @@ impl Connection {
     #[tracing::instrument(level=Level::TRACE, ret, err)]
     pub(crate) async fn read_and_parse(&mut self) -> Result<AGIMessage, AGIParseError> {
         let num_read = self.stream.read(&mut self.buf).await.unwrap();
+        // empty packets are not accepted
         if num_read == 0 {
             return Err(AGIParseError::NoBytes);
         };
 
         match std::str::from_utf8(&self.buf) {
+            // the packet needs to be utf8
             Err(_) => Err(AGIParseError::NotUtf8),
             // and it needs to be parsable as an AGI message
             Ok(x) => x.parse::<AGIMessage>(),
