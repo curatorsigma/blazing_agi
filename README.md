@@ -1,3 +1,5 @@
+![cargo test](https://github.com/curatorsigma/blazing_agi/actions/workflows/rust.yml/badge.svg)
+
 # blazing_agi
 `blazing_agi` is a fast, ergonomic and correct FastAGI Server, written in 100% safe Rust.
 
@@ -54,6 +56,7 @@ If an error is encountered that the Handler does not want to handle, it can be b
 
 `blazing_agi` does not currently contain definitions for all AGI commands.
 Please file an issue or a PR if you want one added.
+In the meantime, you can use the `RawCommand` to send literal strings into Asterisk and do no special parsing on return types.
 
 `blazing_agi` is currently pre-1.0. Consider pinning the exact version you use to ensure you get smooth `cargo update`s.
 
@@ -69,7 +72,6 @@ PRs are of course highly appreciated. As a rule:
 - Use `cargo fmt` and consider using `cargo fix` before creating a PR.
 
 ## Open TODOs
-### Implement a fallback command, that simply passes Strings to allow arbitrary commands
 ### Implement the remaining commands that asterisk allows.
 You can find examples on the approach in `src/command/*.rs`.
 Each command should get its own file in that directory and be re-exported by `crate::command`.
