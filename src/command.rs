@@ -122,7 +122,7 @@ pub use self::set_variable::SetVariable as SetVariable;
 pub struct AGIStatusParseError {
     result: String,
     op_data: Option<String>,
-    pub response_to_command: &'static str,
+    pub(crate) response_to_command: &'static str,
 }
 impl std::fmt::Display for AGIStatusParseError {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
