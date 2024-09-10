@@ -35,7 +35,7 @@ There, we use layering to add a Digest-Authentication Layer on top of a normal a
 which requires minimal setup on the asterisk side, allowing secure authentication for endpoints
 that should not be accessible by anyone.
 
-In general, blazing_agi works by defining [`AGIHandler`] (read: scripts). You then combine them
+In general, blazing_agi works by defining [`AGIHandler`](crate::handler::AGIHandler) (read: scripts). You then combine them
 into [`Router`](crate::router::Router)s. They define which requested uri is handled by which
 handler.
 An `AGIHandler` takes:

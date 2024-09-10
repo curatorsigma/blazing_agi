@@ -79,7 +79,7 @@ impl Connection {
     }
 
     /// Read the next packet and parse it as an AGIMessage
-    #[tracing::instrument(level=Level::TRACE, ret, err)]
+    // #[tracing::instrument(level=Level::TRACE, ret, err)]
     pub(crate) async fn read_and_parse(&mut self) -> Result<AGIMessage, AGIParseError> {
         let num_read = self.stream.read(&mut self.buf).await.unwrap();
         // empty packets are not accepted
