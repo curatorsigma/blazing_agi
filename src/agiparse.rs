@@ -1,7 +1,6 @@
 //! This module parses packets as AGI Requests or Responses.
 use std::{collections::HashMap, error::Error, fmt::Display, path::PathBuf, str::FromStr};
 
-use tracing::Level;
 use url::Url;
 
 /// The common Error type for all problems related to parsing.
