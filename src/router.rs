@@ -237,7 +237,7 @@ impl Router {
     ///
     /// NOTE: it would be nice to remove this panic and bubble an error instead
     /// PANICS if a non-FastAGI request is passed
-    #[tracing::instrument(level=tracing::Level::TRACE,ret)]
+    #[tracing::instrument(skip(self),level=tracing::Level::TRACE)]
     fn route_request<'borrow>(
         &'borrow self,
         request: &AGIVariableDump,
@@ -269,7 +269,7 @@ impl Router {
     /// Note that differently from HTTP, a request really is an incoming stream.
     /// This function removes the protocol start from the stream, extracts some parameters
     /// and then tries to call the correct handler.
-    #[tracing::instrument(level=tracing::Level::TRACE,ret)]
+    #[tracing::instrument(skip(self),level=tracing::Level::TRACE)]
     pub(crate) async fn handle<'borrow>(&'borrow self, stream: TcpStream) {
         let mut conn = Connection::new(stream);
 
