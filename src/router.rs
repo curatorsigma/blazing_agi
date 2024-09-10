@@ -308,8 +308,9 @@ impl Router {
                             info!("During a handler, the client made an error and the handler has asked to terminate the session. The error was: {x}");
                             return;
                         }
-                        Err(_) => {
+                        Err(e) => {
                             warn!("Got a well-formed AGI request, but the handler failed. Request: {full_request:?}.");
+                            warn!("The Error: {e}");
                             return;
                         }
                         Ok(_) => {
