@@ -46,7 +46,7 @@ Commands and parsing the response
 
 An `AGIHandler` can then use the `Connection::send_command` function to send commands to
 the client.
-When it is done, the Handler simply returns Ok(()) to signal that the
+When it is done, the Handler simply returns `Ok(())` to signal that the
 execution was successful and the stream can be terminated.
 If an error is encountered that the Handler does not want to handle, it can be bubbled up as
 `AGIError`, which tells the runtime that something went wrong - the stream is also closed.
@@ -64,6 +64,9 @@ I will promise the following SemVer during pre-1.0:
 - New Features WILL bump the patch level, and MAY bump the minor version, if they are substantial.
 
 MSRV is `rustc 1.80`. The code may work on earlier versions, but I have not tested them.
+
+## Changelog
+You can find the changelog in `CHANGELOG.md`.
 
 # Contributing
 I am very grateful for your help in improving `blazing_agi`!
