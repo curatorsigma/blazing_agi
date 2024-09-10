@@ -47,14 +47,17 @@ impl AGIMessageBuffer {
                 // no more newline in message - copy it in its entirety to the buffer
                 None => {
                     self.this_message.push_str(&buf[current_line_start..]);
-                    // it is possible, that the current content is parsable. Try it, but just
-                    // continue if it fails because we do not know for sure that the message is
-                    // complete
-                    let try_parse = self.try_parse_and_flush();
-                    return match try_parse {
-                        Ok(x) => Ok(x),
-                        Err(_) => Ok(None),
-                    };
+                    // when the current message is a status, it is possible that the message is now
+                    // complete and parsable. Try to parse it, but simply continue if that fails.
+                    if line_type(&self.this_message) == LineType::Status {
+                        let try_parse = self.try_parse_and_flush();
+                        return match try_parse {
+                            Ok(x) => Ok(x),
+                            Err(_) => Ok(None),
+                        };
+                    } else {
+                        return Ok(None);
+                    }
                 }
                 // there was a newline. check what type the line is
                 // (the newline IS PART OF the line, so we index ..= here)
@@ -194,6 +197,7 @@ impl Connection {
 }
 
 /// The type of a line in an agi message of unknown type
+#[derive(Debug,PartialEq)]
 enum LineType {
     /// agi_network: yes
     NetworkStart,
