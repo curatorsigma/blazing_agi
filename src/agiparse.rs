@@ -40,6 +40,10 @@ pub enum AGIParseError {
     StatusWithoutNewline,
     /// A status was parsable, but it is not known
     StatusDoesNotExist(u16),
+    /// It was impossible to read bytes from a TcpStream
+    ReadError,
+    /// There was a network start line sent after another message
+    NetworkStartAfterOtherMessage,
 }
 impl Display for AGIParseError {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
@@ -93,6 +97,15 @@ impl Display for AGIParseError {
                 write!(
                     f,
                     "A status message was contained in a buffer without a newline"
+                )
+            }
+            Self::ReadError => {
+                write!(f, "Unable to read literal bytes from TcpStream")
+            }
+            Self::NetworkStartAfterOtherMessage => {
+                write!(
+                    f,
+                    "There was a line `agi_network: yes` after another message."
                 )
             }
         }
