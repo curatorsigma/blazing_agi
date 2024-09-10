@@ -68,9 +68,11 @@ impl AGIMessageBuffer {
                         return Ok(last_msg);
                     }
                     LineType::Status => {
-                        self.this_message.push_str(&buf[current_line_start..=current_line_start + x]);
+                        self.this_message
+                            .push_str(&buf[current_line_start..=current_line_start + x]);
                         let last_msg = self.try_parse_and_flush()?;
-                        self.this_message.push_str(&buf[current_line_start + x + 1..]);
+                        self.this_message
+                            .push_str(&buf[current_line_start + x + 1..]);
                         return Ok(last_msg);
                     }
                     LineType::NetworkStart => {
@@ -78,7 +80,8 @@ impl AGIMessageBuffer {
                         if last_msg.is_some() {
                             return Err(AGIParseError::NetworkStartAfterOtherMessage);
                         };
-                        self.this_message.push_str(&buf[current_line_start + x + 1..]);
+                        self.this_message
+                            .push_str(&buf[current_line_start + x + 1..]);
                         return Ok(Some(AGIMessage::NetworkStart));
                     }
                     LineType::Unknown => {
@@ -197,7 +200,7 @@ impl Connection {
 }
 
 /// The type of a line in an agi message of unknown type
-#[derive(Debug,PartialEq)]
+#[derive(Debug, PartialEq)]
 enum LineType {
     /// agi_network: yes
     NetworkStart,
@@ -318,14 +321,11 @@ mod test {
         );
     }
 
-
     #[test]
     fn status_split() {
         let message = "200 ";
         let mut message_buf = AGIMessageBuffer::new();
-        assert_eq!(
-            message_buf.handle_single_call_buffer(message),
-            Ok(None));
+        assert_eq!(message_buf.handle_single_call_buffer(message), Ok(None));
         let msg2 = "result=1 done\n";
         assert_eq!(
             message_buf.handle_single_call_buffer(msg2),
@@ -340,9 +340,7 @@ mod test {
     fn status_split_with_nonewline_packet() {
         let message = "200 ";
         let mut message_buf = AGIMessageBuffer::new();
-        assert_eq!(
-            message_buf.handle_single_call_buffer(message),
-            Ok(None));
+        assert_eq!(message_buf.handle_single_call_buffer(message), Ok(None));
         let msg2 = "result";
         let nothing_yet = message_buf.handle_single_call_buffer(msg2);
         assert_eq!(nothing_yet, Ok(None));
@@ -370,14 +368,17 @@ mod test {
             agi_callerid: marcelog \n";
         let msg1res = message_buf.handle_single_call_buffer(msg1);
         assert_eq!(msg1res, Ok(Some(AGIMessage::NetworkStart)));
-        assert_eq!(message_buf.this_message, "agi_network_script: agi.sh \n\
+        assert_eq!(
+            message_buf.this_message,
+            "agi_network_script: agi.sh \n\
             agi_request: /tmp/agi.sh \n\
             agi_channel: SIP/marcelog-e00d2760 \n\
             agi_language: ar \n\
             agi_type: SIP \n\
             agi_uniqueid: 1297542965.8 \n\
             agi_version: 1.6.0.9 \n\
-            agi_callerid: marcelog \n");
+            agi_callerid: marcelog \n"
+        );
         let msg2 = "\
             agi_calleridname: marcelog@mg \n\
             agi_callingpres: 0 \n\
