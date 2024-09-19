@@ -26,7 +26,7 @@ impl Verbose {
 }
 impl std::fmt::Display for Verbose {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
-        write!(f, "VERBOSE \"{}\"\n", self.content)
+        writeln!(f, "VERBOSE \"{}\"", self.content)
     }
 }
 impl AGICommand for Verbose {

@@ -89,12 +89,12 @@ where
     EndUsage,
 }
 /// Convert a Response back into its response code
-impl<H> Into<u16> for AGIResponse<H>
+impl<H> From<AGIResponse<H>> for u16
 where
     H: InnerAGIResponse + Sized,
 {
-    fn into(self) -> u16 {
-        match self {
+    fn from(val: AGIResponse<H>) -> u16 {
+        match val{
             AGIResponse::Ok(_) => 200,
             AGIResponse::Invalid => 510,
             AGIResponse::DeadChannel => 511,
@@ -149,9 +149,9 @@ pub enum Digit {
     Eight,
     Nine,
 }
-impl Into<Characters> for Digit {
-    fn into(self) -> Characters {
-        match self {
+impl From<Digit> for Characters {
+    fn from(val: Digit) -> Self {
+        match val {
             Digit::Zero => Characters::Zero,
             Digit::One => Characters::One,
             Digit::Two => Characters::Two,

@@ -24,10 +24,15 @@ impl Answer {
         Self {}
     }
 }
+impl Default for Answer {
+    fn default() -> Self {
+        Self::new()
+    }
+}
 
 impl std::fmt::Display for Answer {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
-        write!(f, "ANSWER\n")
+        writeln!(f, "ANSWER")
     }
 }
 impl AGICommand for Answer {

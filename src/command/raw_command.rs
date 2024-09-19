@@ -30,7 +30,7 @@ impl RawCommand {
 }
 impl std::fmt::Display for RawCommand {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
-        write!(f, "{}\n", self.command)
+        writeln!(f, "{}", self.command)
     }
 }
 impl AGICommand for RawCommand {

@@ -65,14 +65,14 @@ impl GetFullVariable<ThisChannel> {
 
 impl std::fmt::Display for GetFullVariable<ThisChannel> {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
-        write!(f, "GET FULL VARIABLE \"{}\"\n", self.expression)
+        writeln!(f, "GET FULL VARIABLE \"{}\"", self.expression)
     }
 }
 impl std::fmt::Display for GetFullVariable<OtherChannel> {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
-        write!(
+        writeln!(
             f,
-            "GET FULL VARIABLE \"{}\" \"{}\"\n",
+            "GET FULL VARIABLE \"{}\" \"{}\"",
             self.expression, self.channel_name.channel_name
         )
     }

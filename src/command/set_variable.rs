@@ -27,7 +27,7 @@ impl SetVariable {
 }
 impl std::fmt::Display for SetVariable {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
-        write!(f, "SET VARIABLE \"{}\" \"{}\"\n", self.var_name, self.value)
+        writeln!(f, "SET VARIABLE \"{}\" \"{}\"", self.var_name, self.value)
     }
 }
 impl AGICommand for SetVariable {

@@ -23,12 +23,12 @@ impl AGIMessageBuffer {
 
     /// Try to parse this_message as an AGIMessage
     pub fn try_parse_and_flush(&mut self) -> Result<Option<AGIMessage>, AGIParseError> {
-        if self.this_message.len() == 0 {
+        if self.this_message.is_empty() {
             return Ok(None);
         };
         let msg = self.this_message.parse::<AGIMessage>()?;
         self.this_message = String::new();
-        return Ok(Some(msg));
+        Ok(Some(msg))
     }
 
     /// Given a single response from a tcp read, parse it and potentially return the next
@@ -130,12 +130,12 @@ impl Connection {
         self.stream
             .write(string_to_send.as_bytes())
             .await
-            .map_err(|e| AGIError::CannotSendCommand(e))?;
+            .map_err(AGIError::CannotSendCommand)?;
         // make sure that we get an AGIStatus as a result
         let response = self
             .read_and_parse()
             .await
-            .map_err(|e| AGIError::ParseError(e))?;
+            .map_err(AGIError::ParseError)?;
         Self::agi_response_as_specialized_status::<H>(response)
     }
 
