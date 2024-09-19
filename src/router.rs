@@ -193,7 +193,7 @@ impl Router {
     /// hashmap
     #[cfg_attr(feature = "tracing", tracing::instrument(level=tracing::Level::TRACE,ret))]
     fn path_matches(
-        path: &Vec<String>,
+        path: &[String],
         url: &Url,
     ) -> Option<(HashMap<String, String>, Option<String>)> {
         let mut idx_in_path = 0;
@@ -231,10 +231,10 @@ impl Router {
         // we have iterated through the entire url that got passed to us
         // return success, if our predefined path is also exhausted
         if idx_in_path == path.len() {
-            return Some((captures, None));
+            Some((captures, None))
         } else {
-            return None;
-        };
+            None
+        }
     }
 
     /// Find the correct handler for a request.
@@ -269,7 +269,7 @@ impl Router {
             }
         }
         // nothing found. return the fallback handler
-        return (&self.fallback, HashMap::<String, String>::new(), None);
+        (&self.fallback, HashMap::<String, String>::new(), None)
     }
 
     /// Handle a Request.
@@ -277,7 +277,7 @@ impl Router {
     /// This function removes the protocol start from the stream, extracts some parameters
     /// and then tries to call the correct handler.
     #[cfg_attr(feature = "tracing", tracing::instrument(skip(self),level=tracing::Level::TRACE))]
-    pub(crate) async fn handle<'borrow>(&'borrow self, stream: TcpStream) {
+    pub(crate) async fn handle(&self, stream: TcpStream) {
         let mut conn = Connection::new(stream);
 
         // the first packet has to be agi_network: yes
@@ -299,9 +299,7 @@ impl Router {
         // the second has to be a variable dump
         // we parse it and dispatch the correct handler
         match conn.read_and_parse().await {
-            Err(_) => {
-                return;
-            }
+            Err(_) => {}
             Ok(AGIMessage::VariableDump(request_data)) => {
                 if let AGIRequestType::FastAGI(_) = request_data.request {
                     // find the handler responsible
@@ -318,7 +316,6 @@ impl Router {
                         Err(AGIError::ClientSideError(x)) => {
                             #[cfg(feature = "tracing")]
                             info!("During a handler, the client made an error and the handler has asked to terminate the session. The error was: {x}");
-                            return;
                         }
                         #[cfg_attr(not(feature = "tracing"), allow(unused_variables))]
                         Err(e) => {
@@ -326,7 +323,6 @@ impl Router {
                             warn!("Got a well-formed AGI request, but the handler failed. Request: {full_request:?}.");
                             #[cfg(feature = "tracing")]
                             warn!("The Error: {e}");
-                            return;
                         }
                         Ok(_) => {
                             #[cfg(feature = "tracing")]
@@ -338,7 +334,6 @@ impl Router {
                     info!("Got a non-FastAGI request and ignored it.");
                     #[cfg(feature = "tracing")]
                     trace!("The packet was: {request_data}");
-                    return;
                 };
             }
             #[cfg_attr(not(feature = "tracing"), allow(unused_variables))]
@@ -347,7 +342,6 @@ impl Router {
                 info!("The second packet in an incoming connection was not an AGIVariableDump. Dropping the connection.");
                 #[cfg(feature = "tracing")]
                 trace!("The packet was: {m}");
-                return;
             }
         };
     }
