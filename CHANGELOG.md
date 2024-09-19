@@ -1,6 +1,8 @@
 # 0.2.0 -> 0.3.0
 - Removed `NotFastAGI` variant from `AGIParseError`
 - Made `NotAStatus` variant take a `Box<AGIMessage>` to conserve stack space
+- Made `AGIMessage` take `AGIVariableDump` by Box to reduce enum size.
+- Added `Default` to `Router` and `Answer`
 
 # 0.1.0 -> 0.2.0
 ## Rationale for this Version bump
