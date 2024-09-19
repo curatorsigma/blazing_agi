@@ -2,6 +2,7 @@
 //! A [`Router`] is made up of [`AGIHandler`]s at some paths, potentially with [`Layer`]s to apply
 //! logic to multiple routes at once.
 use tokio::net::TcpStream;
+#[cfg(feature = "tracing")]
 use tracing::{error, event, info, trace, warn, Level};
 use url::Url;
 
@@ -190,7 +191,7 @@ impl Router {
     ///
     /// This function guarantees, that all defined captures have a value set in the returned
     /// hashmap
-    #[tracing::instrument(level=tracing::Level::TRACE,ret)]
+    #[cfg_attr(feature = "tracing", tracing::instrument(level=tracing::Level::TRACE,ret))]
     fn path_matches(
         path: &Vec<String>,
         url: &Url,
@@ -240,7 +241,7 @@ impl Router {
     ///
     /// NOTE: it would be nice to remove this panic and bubble an error instead
     /// PANICS if a non-FastAGI request is passed
-    #[tracing::instrument(skip(self),level=tracing::Level::TRACE)]
+    #[cfg_attr(feature = "tracing", tracing::instrument(skip(self),level=tracing::Level::TRACE))]
     fn route_request<'borrow>(
         &'borrow self,
         request: &AGIVariableDump,
@@ -252,10 +253,13 @@ impl Router {
         let url = match &request.request {
             agiparse::AGIRequestType::FastAGI(x) => x.clone(),
             _ => {
-                error!("INTERNAL ERROR. A caller to ::blazing_agi::Router::route_request must ensure that the input is FastAGI, and didn't.");
-                error!("Please file an issue for this error to the blazing_agi repo");
-                error!("{self:?}");
-                error!("{request:?}");
+                #[cfg(feature = "tracing")]
+                {
+                    error!("INTERNAL ERROR. A caller to ::blazing_agi::Router::route_request must ensure that the input is FastAGI, and didn't.");
+                    error!("Please file an issue for this error to the blazing_agi repo");
+                    error!("{self:?}");
+                    error!("{request:?}");
+                }
                 panic!("Caller must ensure that only FastAGI requests get passed.")
             }
         };
@@ -272,7 +276,7 @@ impl Router {
     /// Note that differently from HTTP, a request really is an incoming stream.
     /// This function removes the protocol start from the stream, extracts some parameters
     /// and then tries to call the correct handler.
-    #[tracing::instrument(skip(self),level=tracing::Level::TRACE)]
+    #[cfg_attr(feature = "tracing", tracing::instrument(skip(self),level=tracing::Level::TRACE))]
     pub(crate) async fn handle<'borrow>(&'borrow self, stream: TcpStream) {
         let mut conn = Connection::new(stream);
 
@@ -282,8 +286,11 @@ impl Router {
                 return;
             }
             Ok(AGIMessage::NetworkStart) => {}
+            #[cfg_attr(not(feature = "tracing"), allow(unused_variables))]
             Ok(m) => {
+                #[cfg(feature = "tracing")]
                 info!("Got incoming connection, but the first packet was not agi_network: yes");
+                #[cfg(feature = "tracing")]
                 trace!("The packet was: {m}");
                 return;
             }
@@ -307,27 +314,38 @@ impl Router {
                     };
                     let handle_response = handler.handle(&mut conn, &full_request).await;
                     match handle_response {
+                        #[cfg_attr(not(feature = "tracing"), allow(unused_variables))]
                         Err(AGIError::ClientSideError(x)) => {
+                            #[cfg(feature = "tracing")]
                             info!("During a handler, the client made an error and the handler has asked to terminate the session. The error was: {x}");
                             return;
                         }
+                        #[cfg_attr(not(feature = "tracing"), allow(unused_variables))]
                         Err(e) => {
+                            #[cfg(feature = "tracing")]
                             warn!("Got a well-formed AGI request, but the handler failed. Request: {full_request:?}.");
+                            #[cfg(feature = "tracing")]
                             warn!("The Error: {e}");
                             return;
                         }
                         Ok(_) => {
+                            #[cfg(feature = "tracing")]
                             event!(Level::DEBUG, "Succesfully handled a connection.");
                         }
                     };
                 } else {
+                    #[cfg(feature = "tracing")]
                     info!("Got a non-FastAGI request and ignored it.");
+                    #[cfg(feature = "tracing")]
                     trace!("The packet was: {request_data}");
                     return;
                 };
             }
+            #[cfg_attr(not(feature = "tracing"), allow(unused_variables))]
             Ok(m) => {
+                #[cfg(feature = "tracing")]
                 info!("The second packet in an incoming connection was not an AGIVariableDump. Dropping the connection.");
+                #[cfg(feature = "tracing")]
                 trace!("The packet was: {m}");
                 return;
             }

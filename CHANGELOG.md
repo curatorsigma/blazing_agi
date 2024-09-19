@@ -3,6 +3,7 @@
 - Made `NotAStatus` variant take a `Box<AGIMessage>` to conserve stack space
 - Made `AGIMessage` take `AGIVariableDump` by Box to reduce enum size.
 - Added `Default` to `Router` and `Answer`
+- Moved tracing to its own feature `tracing`
 
 # 0.1.0 -> 0.2.0
 ## Rationale for this Version bump

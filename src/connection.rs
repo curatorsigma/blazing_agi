@@ -1,6 +1,7 @@
 //! This module handles the literal network connection and sends/receives packets.
 use tokio::io::{AsyncReadExt, AsyncWriteExt};
 use tokio::net::TcpStream;
+#[cfg(feature = "tracing")]
 use tracing::{trace, Level};
 
 use crate::*;
@@ -117,7 +118,7 @@ impl Connection {
     /// method is concerned.
     ///
     /// Note that the precice return type depends on the command sent.
-    #[tracing::instrument(skip(self),level=Level::TRACE)]
+    #[cfg_attr(feature = "tracing", tracing::instrument(skip(self),level=Level::TRACE))]
     pub async fn send_command<H>(
         &mut self,
         command: H,
@@ -175,6 +176,7 @@ impl Connection {
         };
         let as_utf8 = ::std::str::from_utf8(&ephemeral_buf).map_err(|_| AGIParseError::NotUtf8)?;
         let first_zero_index = as_utf8.find('\0').unwrap_or(as_utf8.len());
+        #[cfg(feature = "tracing")]
         trace!("new bytes read from network in a single call: {as_utf8}");
         self.message_buf
             .handle_single_call_buffer(&as_utf8[0..first_zero_index])

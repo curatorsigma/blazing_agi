@@ -1,4 +1,8 @@
 //! Defines the [`AGIHandler`], the most basic instrument for answering FastAGI requests.
+
+#[cfg(feature = "tracing")]
+extern crate tracing;
+#[cfg(feature = "tracing")]
 use tracing::Level;
 
 use crate::{command::verbose::Verbose, AGIError, AGIRequest, Connection};
@@ -73,7 +77,7 @@ pub(crate) struct FallbackHandler {}
 impl AGIHandler for FallbackHandler {
     // clippy is confused by tracing::instrument here
     #[allow(clippy::blocks_in_conditions)]
-    #[tracing::instrument(skip(self),level=Level::DEBUG, ret, err)]
+    #[cfg_attr(feature = "tracing", tracing::instrument(skip(self),level=Level::DEBUG, ret, err))]
     async fn handle(&self, connection: &mut Connection, _: &AGIRequest) -> Result<(), AGIError> {
         connection
             .send_command(Verbose::new("Route not found".to_owned()))
