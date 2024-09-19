@@ -132,10 +132,7 @@ impl Connection {
             .await
             .map_err(AGIError::CannotSendCommand)?;
         // make sure that we get an AGIStatus as a result
-        let response = self
-            .read_and_parse()
-            .await
-            .map_err(AGIError::ParseError)?;
+        let response = self.read_and_parse().await.map_err(AGIError::ParseError)?;
         Self::agi_response_as_specialized_status::<H>(response)
     }
 

@@ -94,7 +94,7 @@ where
     H: InnerAGIResponse + Sized,
 {
     fn from(val: AGIResponse<H>) -> u16 {
-        match val{
+        match val {
             AGIResponse::Ok(_) => 200,
             AGIResponse::Invalid => 510,
             AGIResponse::DeadChannel => 511,
