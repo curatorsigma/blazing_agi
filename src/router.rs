@@ -70,9 +70,9 @@ impl Router {
     ///     .route("/first/path", foo_handler)
     ///     .route("/api/:user/voicemail/*", voicemail_handler);
     /// ```
-    pub fn route<H: AGIHandler>(mut self, location: &str, handler: H) -> Self
+    pub fn route<H>(mut self, location: &str, handler: H) -> Self
     where
-        H: 'static,
+        H: AGIHandler + 'static,
     {
         if location.is_empty() {
             panic!("Path must not be empty");
@@ -136,9 +136,9 @@ impl Router {
     ///     .route("/some/path", foo_handler)
     ///     .fallback(bar_handler);
     /// ```
-    pub fn fallback<H: AGIHandler>(mut self, handler: H) -> Self
+    pub fn fallback<H>(mut self, handler: H) -> Self
     where
-        H: 'static,
+        H: AGIHandler + 'static,
     {
         self.fallback = Box::new(handler);
         self
@@ -222,10 +222,8 @@ impl Router {
                 }
                 return Some((captures, Some(wildcards)));
             // normal segment - simply continue iterating
-            } else {
-                if path[idx_in_path] != segment_to_match {
-                    return None;
-                }
+            } else if path[idx_in_path] != segment_to_match {
+                return None;
             };
             idx_in_path += 1;
         }

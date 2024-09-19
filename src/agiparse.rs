@@ -191,10 +191,10 @@ impl FromStr for AGIRequestType {
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         // try to parse as URI
         if let Ok(parsed_uri) = s.parse::<Url>() {
-            return Ok(Self::FastAGI(parsed_uri));
+            Ok(Self::FastAGI(parsed_uri))
         } else {
             // then try to parse as path
-            return Ok(Self::File(PathBuf::from(s)));
+            Ok(Self::File(PathBuf::from(s)))
         }
     }
 }
@@ -219,7 +219,7 @@ fn enhanced_status(input: &str) -> Result<bool, AGIParseError> {
     if input == "1.0" {
         return Ok(true);
     }
-    return Err(AGIParseError::EnhancedUnparsable(input.to_owned()));
+    Err(AGIParseError::EnhancedUnparsable(input.to_owned()))
 }
 
 /// The VariableDump (i.e. an AGI request). This is the second packet asterisk sends, after an
@@ -254,31 +254,31 @@ pub struct AGIVariableDump {
 }
 impl Display for AGIVariableDump {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
-        write!(f, "agi_network_script: {}\n", self.network_script)?;
-        write!(f, "agi_request: {}\n", self.request)?;
-        write!(f, "agi_channel: {}\n", self.channel)?;
-        write!(f, "agi_language: {}\n", self.language)?;
-        write!(f, "agi_channel_type: {}\n", self.channel_type)?;
-        write!(f, "agi_uniqueid: {}\n", self.uniqueid)?;
-        write!(f, "agi_version: {}\n", self.version)?;
-        write!(f, "agi_callerid: {}\n", self.callerid)?;
-        write!(f, "agi_calleridname: {}\n", self.calleridname)?;
-        write!(f, "agi_callingpres: {}\n", self.callingpres)?;
-        write!(f, "agi_callingani2: {}\n", self.callingani2)?;
-        write!(f, "agi_callington: {}\n", self.callington)?;
-        write!(f, "agi_callingtns: {}\n", self.callingtns)?;
-        write!(f, "agi_dnid: {}\n", self.dnid)?;
-        write!(f, "agi_rdnis: {}\n", self.rdnis)?;
-        write!(f, "agi_context: {}\n", self.context)?;
-        write!(f, "agi_extension: {}\n", self.extension)?;
-        write!(f, "agi_priority: {}\n", self.priority)?;
-        write!(f, "agi_enhanced: {}\n", self.enhanced)?;
-        write!(f, "agi_accountcode: {}\n", self.accountcode)?;
-        write!(f, "agi_threadid: {}\n", self.threadid)?;
+        writeln!(f, "agi_network_script: {}", self.network_script)?;
+        writeln!(f, "agi_request: {}", self.request)?;
+        writeln!(f, "agi_channel: {}", self.channel)?;
+        writeln!(f, "agi_language: {}", self.language)?;
+        writeln!(f, "agi_channel_type: {}", self.channel_type)?;
+        writeln!(f, "agi_uniqueid: {}", self.uniqueid)?;
+        writeln!(f, "agi_version: {}", self.version)?;
+        writeln!(f, "agi_callerid: {}", self.callerid)?;
+        writeln!(f, "agi_calleridname: {}", self.calleridname)?;
+        writeln!(f, "agi_callingpres: {}", self.callingpres)?;
+        writeln!(f, "agi_callingani2: {}", self.callingani2)?;
+        writeln!(f, "agi_callington: {}", self.callington)?;
+        writeln!(f, "agi_callingtns: {}", self.callingtns)?;
+        writeln!(f, "agi_dnid: {}", self.dnid)?;
+        writeln!(f, "agi_rdnis: {}", self.rdnis)?;
+        writeln!(f, "agi_context: {}", self.context)?;
+        writeln!(f, "agi_extension: {}", self.extension)?;
+        writeln!(f, "agi_priority: {}", self.priority)?;
+        writeln!(f, "agi_enhanced: {}", self.enhanced)?;
+        writeln!(f, "agi_accountcode: {}", self.accountcode)?;
+        writeln!(f, "agi_threadid: {}", self.threadid)?;
         for idx in 0..self.custom_args.len() {
-            write!(
+            writeln!(
                 f,
-                "agi_arg_{}: {}\n",
+                "agi_arg_{}: {}",
                 idx,
                 self.custom_args
                     .get(&(idx as u8))
@@ -319,7 +319,7 @@ impl FromStr for AGIVariableDump {
 
         for line in input.lines() {
             // stop on empty lines
-            if line == "" {
+            if line.is_empty() {
                 break;
             };
             let mut name_value = line.split(": ");
@@ -463,7 +463,7 @@ impl FromStr for AGIVariableDump {
             accountcode: accountcode
                 .ok_or(AGIParseError::VariableMissing("accountcode".to_owned()))?,
             threadid: threadid.ok_or(AGIParseError::VariableMissing("threadid".to_owned()))?,
-            custom_args: custom_args.unwrap_or(HashMap::<u8, String>::new()),
+            custom_args: custom_args.unwrap_or_default(),
         })
     }
 }

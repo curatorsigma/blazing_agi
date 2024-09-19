@@ -37,9 +37,9 @@
 //! handler.
 //! An [`AGIHandler`] takes:
 //! - a &mut [`Connection`] - this is a wrapper around a tokio `TcpStream`, which handles sending
-//! Commands and parsing the response
+//!   Commands and parsing the response
 //! - a & [`AGIRequest`] - this contains the data send in the initial request made by the client
-//! (asterisk).
+//!   (asterisk).
 //!
 //! An [`AGIHandler`] can then use the [`Connection::send_command`] function to send commands to
 //! the client.
