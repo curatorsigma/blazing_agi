@@ -16,7 +16,7 @@ jobs:
 
     steps:
     - uses: actions/checkout@v4
-    - name: Build
-      run: cargo build --verbose
-    - name: Run tests
+    - name: "Test with default features"
       run: cargo test --verbose
+    - name: "Compile with all features"
+      run: cargo build --verbose --all-features
