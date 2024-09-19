@@ -149,7 +149,7 @@ impl Connection {
         // Get the response and return it
         let status = match message {
             AGIMessage::Status(x) => Ok(x),
-            x => Err(AGIError::NotAStatus(x)),
+            x => Err(AGIError::NotAStatus(Box::new(x))),
         }?;
         match status {
             AGIStatusGeneric::Ok(ref result, ref op_data) => {
@@ -189,11 +189,8 @@ impl Connection {
         // `read`s.
         loop {
             let next_message_opt = self.read_single_call().await?;
-            match next_message_opt {
-                Some(x) => {
-                    return Ok(x);
-                }
-                None => {}
+            if let Some(x) = next_message_opt {
+                return Ok(x);
             };
         }
     }

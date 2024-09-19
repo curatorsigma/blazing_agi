@@ -17,6 +17,11 @@ pub struct Router {
     routes: Vec<(Vec<String>, Box<dyn AGIHandler>)>,
     fallback: Box<dyn AGIHandler>,
 }
+impl Default for Router {
+    fn default() -> Self {
+        Self::new()
+    }
+}
 impl Router {
     /// Create the default router which has only a simple fallback route added.
     ///
@@ -69,10 +74,10 @@ impl Router {
     where
         H: 'static,
     {
-        if location.len() == 0 {
+        if location.is_empty() {
             panic!("Path must not be empty");
         };
-        if location.chars().next().unwrap() != '/' {
+        if !location.starts_with('/') {
             panic!("Path must start with a '/'");
         };
         self.routes.push((
@@ -164,7 +169,7 @@ impl Router {
     ///     .layer(layer_before!(bar_handler));
     /// ```
     pub fn layer<L: Layer>(self, layer: L) -> Self {
-        return Router {
+        Router {
             routes: self
                 .routes
                 .into_iter()
@@ -176,7 +181,7 @@ impl Router {
                 })
                 .collect(),
             fallback: self.fallback,
-        };
+        }
     }
 
     /// Find out, whether path defines a route that should handle url.
@@ -196,7 +201,7 @@ impl Router {
         let path_segs_opt = url.path_segments();
         // early return for empty request path
         if path_segs_opt.is_none() {
-            if path.len() == 0 {
+            if path.is_empty() {
                 return Some((captures, None));
             } else {
                 return None;
@@ -242,7 +247,7 @@ impl Router {
         &'borrow self,
         request: &AGIVariableDump,
     ) -> (
-        &'borrow Box<dyn AGIHandler>,
+        &'borrow dyn AGIHandler,
         HashMap<String, String>,
         Option<String>,
     ) {
@@ -256,9 +261,9 @@ impl Router {
                 panic!("Caller must ensure that only FastAGI requests get passed.")
             }
         };
-        for (path, handler) in self.routes.iter() {
+        for (idx, (path, _)) in self.routes.iter().enumerate() {
             if let Some((captures, wildcards)) = Router::path_matches(path, &url) {
-                return (&Box::new(handler), captures, wildcards);
+                return (&self.routes[idx].1, captures, wildcards);
             }
         }
         // nothing found. return the fallback handler

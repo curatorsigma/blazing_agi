@@ -73,8 +73,6 @@ pub enum AGIError {
     ClientSideError(String),
     /// Expected a 200-response, but got something else.
     Not200(u16),
-    /// The request was a normal AGI request over the network.
-    NotFastAGI(AGIRequest),
     /// agi:// was not chosen as the schema.
     WrongSchema(String),
     /// A handler expected (param 1) custom arguments, but only (param 2) were actually passed.
@@ -86,7 +84,7 @@ pub enum AGIError {
     /// Unable to parse an incoming packet.
     ParseError(AGIParseError),
     /// A parsable message came in. We expected a Status, but got something else.
-    NotAStatus(AGIMessage),
+    NotAStatus(Box<AGIMessage>),
     /// The generic AGI status could be read, the expected return type is known, but the response
     /// actually received is not parsable as the special response type expected.
     AGIStatusUnspecializable(AGIStatusGeneric, &'static str),
@@ -94,9 +92,6 @@ pub enum AGIError {
 impl std::fmt::Display for AGIError {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
         match self {
-            Self::NotFastAGI(_) => {
-                write!(f, "The request is not a FastAGI request")
-            }
             Self::WrongSchema(x) => {
                 write!(f, "The schema {x} is not known")
             }

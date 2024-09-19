@@ -1,3 +1,7 @@
+# 0.2.0 -> 0.3.0
+- Removed `NotFastAGI` variant from `AGIParseError`
+- Made `NotAStatus` variant take a `Box<AGIMessage>` to conserve stack space
+
 # 0.1.0 -> 0.2.0
 ## Rationale for this Version bump
 Version 0.1.0 did not handle TcpStream properly. It assumed that Messages are always sent as whole packets, which may not be true

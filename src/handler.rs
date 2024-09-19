@@ -71,6 +71,8 @@ impl AGIHandler for AndThenHandler {
 pub(crate) struct FallbackHandler {}
 #[async_trait::async_trait]
 impl AGIHandler for FallbackHandler {
+    // clippy is confused by tracing::instrument here
+    #[allow(clippy::blocks_in_conditions)]
     #[tracing::instrument(skip(self),level=Level::DEBUG, ret, err)]
     async fn handle(&self, connection: &mut Connection, _: &AGIRequest) -> Result<(), AGIError> {
         connection
