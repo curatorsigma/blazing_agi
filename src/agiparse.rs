@@ -473,7 +473,7 @@ impl FromStr for AGIVariableDump {
 #[derive(Debug, PartialEq, Eq)]
 pub enum AGIMessage {
     /// VariableDump (i.e. a request)
-    VariableDump(AGIVariableDump),
+    VariableDump(Box<AGIVariableDump>),
     /// Status (i.e. the Response after we have sent a command)
     Status(AGIStatusGeneric),
     /// the packet `agi_network: yes\n`
@@ -492,7 +492,7 @@ impl FromStr for AGIMessage {
                     .parse()?,
             ))
         } else {
-            Ok(AGIMessage::VariableDump(s.parse()?))
+            Ok(AGIMessage::VariableDump(Box::new(s.parse()?)))
         }
     }
 }
@@ -766,7 +766,7 @@ mod tests {
         let vardump = message.parse::<AGIMessage>().unwrap();
         assert_eq!(
             vardump,
-            AGIMessage::VariableDump(AGIVariableDump {
+            AGIMessage::VariableDump(Box::new(AGIVariableDump {
                 network_script: "agi.sh".to_owned(),
                 request: AGIRequestType::File(PathBuf::from("/tmp/agi.sh"),),
                 channel: "SIP/marcelog-e00d2760".to_owned(),
@@ -789,7 +789,7 @@ mod tests {
                 accountcode: "".to_owned(),
                 threadid: 1104922960,
                 custom_args: HashMap::<u8, String>::new(),
-            })
+            }))
         );
     }
 

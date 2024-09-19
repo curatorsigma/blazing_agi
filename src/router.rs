@@ -303,7 +303,7 @@ impl Router {
                     let (handler, captures, wildcards) = self.route_request(&request_data);
                     // create the agirequest item and call the handler
                     let full_request = AGIRequest {
-                        variables: request_data,
+                        variables: *request_data,
                         captures,
                         wildcards,
                     };

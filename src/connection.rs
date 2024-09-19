@@ -277,7 +277,7 @@ mod test {
             .unwrap();
         assert_eq!(
             vardump,
-            AGIMessage::VariableDump(AGIVariableDump {
+            AGIMessage::VariableDump(Box::new(AGIVariableDump {
                 network_script: "agi.sh".to_owned(),
                 request: agiparse::AGIRequestType::File(PathBuf::from("/tmp/agi.sh"),),
                 channel: "SIP/marcelog-e00d2760".to_owned(),
@@ -300,7 +300,7 @@ mod test {
                 accountcode: "".to_owned(),
                 threadid: 1104922960,
                 custom_args: HashMap::<u8, String>::new(),
-            })
+            }))
         );
         assert_eq!(message_buf.this_message, "".to_owned());
     }
@@ -400,7 +400,7 @@ mod test {
             .unwrap();
         assert_eq!(
             vardump,
-            AGIMessage::VariableDump(AGIVariableDump {
+            AGIMessage::VariableDump(Box::new(AGIVariableDump {
                 network_script: "agi.sh".to_owned(),
                 request: agiparse::AGIRequestType::File(PathBuf::from("/tmp/agi.sh"),),
                 channel: "SIP/marcelog-e00d2760".to_owned(),
@@ -423,7 +423,7 @@ mod test {
                 accountcode: "".to_owned(),
                 threadid: 1104922960,
                 custom_args: HashMap::<u8, String>::new(),
-            })
+            }))
         );
         assert_eq!(message_buf.this_message, "".to_owned());
     }
