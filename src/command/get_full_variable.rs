@@ -8,11 +8,11 @@ use super::*;
 // typestate patterns to ensure that only commands that are actuall allowed can even be built
 pub trait TargetChannel: Send + Sync + std::fmt::Debug {}
 #[derive(Debug, PartialEq)]
-/// A variant of TargetChannel. Use the channel that originated the FastAGI call.
+/// A variant of `TargetChannel`. Use the channel that originated the FastAGI call.
 pub struct ThisChannel {}
 impl TargetChannel for ThisChannel {}
 #[derive(Debug, PartialEq)]
-/// A variant of TargetChannel. Use the defined Channel.
+/// A variant of `TargetChannel`. Use the defined Channel.
 pub struct OtherChannel {
     /// Use this channel name to evaluate the expression of the [`GetFullVariable`] command that
     /// uses this instance in its `TargetChannel`

@@ -9,8 +9,8 @@ use crate::{command::verbose::Verbose, AGIError, AGIRequest, Connection};
 
 /// The main trait that handles an AGI request.
 ///
-/// Using this crate usually boils down to creating a [`Router`](crate::router::Router) from [`AGIHandler`](self::AGIHandler)s.
-/// If the Handler needs no state, consider using the [`create_handler!`](`blazing_agi_macros::create_handler`) macro
+/// Using this crate usually boils down to creating a [`Router`](crate::router::Router) from [`AGIHandler`](crate::Handler::AGIHandler)s.
+/// If the Handler needs no state, consider using the [`create_handler!`](blazing_agi_macros::create_handler) macro
 /// for converting async fn into AGIHandler.
 /// If your handler needs state between different requests, you may want to manually impl
 /// AGIHandler. Make sure to use `#[async_trait::async_trait]` for your impl block.

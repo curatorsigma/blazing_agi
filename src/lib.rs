@@ -1,7 +1,7 @@
-//! blazing_agi is a fast, ergonomic and correct FastAGI Server.
+//! `blazing_agi` is a fast, ergonomic and correct FastAGI Server.
 //!
-//! blazing_agi requires the use of tokio. Executor independence is currently not a goal.
-//! blazing_agi does not currently contain definitions for all AGI commands. Please file an issue
+//! `blazing_agi` requires the use of [tokio]. Executor independence is currently not a goal.
+//! `blazing_agi` does not currently contain definitions for all AGI commands. Please file an issue
 //! or a PR if you want one added.
 //!
 //! To get started, consider this "Hello World" example:
@@ -32,18 +32,18 @@
 //! ```
 //! You can find a more elaborate example in `examples/layer-agi-digest.rs`.
 //!
-//! In general, blazing_agi works by defining [`AGIHandler`] (read: scripts). You then combine them
+//! In general, `blazing_agi` works by defining [`AGIHandler`] (read: scripts). You then combine them
 //! into [`Router`](crate::router::Router)s. They define which requested uri is handled by which
 //! handler.
 //! An [`AGIHandler`] takes:
-//! - a &mut [`Connection`] - this is a wrapper around a tokio `TcpStream`, which handles sending
+//! - a &mut [`Connection`] - this is a wrapper around a tokio [`TcpStream`](tokio::net::TcpStream), which handles sending
 //!   Commands and parsing the response
 //! - a & [`AGIRequest`] - this contains the data send in the initial request made by the client
 //!   (asterisk).
 //!
 //! An [`AGIHandler`] can then use the [`Connection::send_command`] function to send commands to
 //! the client.
-//! When it is done, the Handler simply returns Ok(()) to signal that the
+//! When it is done, the Handler simply returns `Ok(())` to signal that the
 //! execution was successful and the stream can be terminated.
 //! If an error is encountered that the Handler does not want to handle, it can be bubbled up as
 //! [`AGIError`], which tells the runtime that something went wrong - the stream is also closed.
@@ -77,7 +77,7 @@ pub enum AGIError {
     WrongSchema(String),
     /// A handler expected (param 1) custom arguments, but only (param 2) were actually passed.
     NotEnoughCustomVariables(u8, u8),
-    /// Unable to spawn a TcpListener.
+    /// Unable to spawn a [`TcpListener`](tokio::net::TcpListener).
     CannotSpawnListener,
     /// Unable to send a command.
     CannotSendCommand(tokio::io::Error),

@@ -52,7 +52,7 @@ pub use self::get_full_variable::GetFullVariable;
 pub mod set_variable;
 pub use self::set_variable::SetVariable;
 
-/// An Error that occured while converting an AGIStatusGeneric to a specialized response.
+/// An Error that occured while converting an [`AGIStatusGeneric`](crate::agiparse::AGIStatusGeneric) to a specialized response.
 #[derive(Debug, PartialEq)]
 pub struct AGIStatusParseError {
     result: String,

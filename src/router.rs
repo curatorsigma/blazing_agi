@@ -27,6 +27,7 @@ impl Router {
     /// Create the default router which has only a simple fallback route added.
     ///
     /// It will respond to any request with "VERBOSE 'this route does not exist'"
+    #[must_use = "Run this router with blazing_agi::serve::serve"]
     pub fn new() -> Self {
         Router {
             routes: vec![],
@@ -71,16 +72,19 @@ impl Router {
     ///     .route("/first/path", foo_handler)
     ///     .route("/api/:user/voicemail/*", voicemail_handler);
     /// ```
+    ///
+    /// # Panics
+    ///
+    /// This functions panics when inputs are wrong - You are expected to create the Router
+    /// immediately on service start.
+    /// Panics if a path not starting with '/' is given.
+    #[must_use = "Run this router with blazing_agi::serve::serve"]
     pub fn route<H>(mut self, location: &str, handler: H) -> Self
     where
         H: AGIHandler + 'static,
     {
-        if location.is_empty() {
-            panic!("Path must not be empty");
-        };
-        if !location.starts_with('/') {
-            panic!("Path must start with a '/'");
-        };
+        assert!(!location.is_empty(), "Path must not be empty");
+        assert!(location.starts_with('/'), "Path must start with a '/'");
         self.routes.push((
             location.split('/').skip(1).map(|s| s.to_owned()).collect(),
             Box::new(handler),
@@ -111,6 +115,7 @@ impl Router {
     ///     .route("/api/:user/voicemail/*", voicemail_handler);
     /// let full_router = some_router.merge(api_router);
     /// ```
+    #[must_use = "Run this router with blazing_agi::serve::serve"]
     pub fn merge(mut self, mut other: Router) -> Router {
         self.routes.append(&mut other.routes);
         self
@@ -137,6 +142,7 @@ impl Router {
     ///     .route("/some/path", foo_handler)
     ///     .fallback(bar_handler);
     /// ```
+    #[must_use = "Run this router with blazing_agi::serve::serve"]
     pub fn fallback<H>(mut self, handler: H) -> Self
     where
         H: AGIHandler + 'static,
@@ -169,6 +175,7 @@ impl Router {
     ///     .route("/some/other/path", foo_handler)
     ///     .layer(layer_before!(bar_handler));
     /// ```
+    #[must_use = "Run this router with blazing_agi::serve::serve"]
     pub fn layer<L: Layer>(self, layer: L) -> Self {
         Router {
             routes: self
@@ -204,9 +211,8 @@ impl Router {
         if path_segs_opt.is_none() {
             if path.is_empty() {
                 return Some((captures, None));
-            } else {
-                return None;
             };
+            return None;
         };
         let mut path_segs = path_segs_opt.expect("is_none should have been handled earlier");
         while let Some(segment_to_match) = path_segs.next() {
@@ -219,8 +225,8 @@ impl Router {
                 wildcards.push_str(segment_to_match);
                 for rem in path_segs {
                     wildcards.push('/');
-                    wildcards.push_str(rem)
-                }
+                    wildcards.push_str(rem);
+                };
                 return Some((captures, Some(wildcards)));
             // normal segment - simply continue iterating
             } else if path[idx_in_path] != segment_to_match {
@@ -240,7 +246,9 @@ impl Router {
     /// Find the correct handler for a request.
     ///
     /// NOTE: it would be nice to remove this panic and bubble an error instead
-    /// PANICS if a non-FastAGI request is passed
+    /// # Panics
+    ///
+    /// Panics if a non-FastAGI request is passed.
     #[cfg_attr(feature = "tracing", tracing::instrument(skip(self),level=tracing::Level::TRACE))]
     fn route_request<'borrow>(
         &'borrow self,
@@ -252,7 +260,7 @@ impl Router {
     ) {
         let url = match &request.request {
             agiparse::AGIRequestType::FastAGI(x) => x.clone(),
-            _ => {
+            agiparse::AGIRequestType::File(_) => {
                 #[cfg(feature = "tracing")]
                 {
                     error!("INTERNAL ERROR. A caller to ::blazing_agi::Router::route_request must ensure that the input is FastAGI, and didn't.");
@@ -324,7 +332,7 @@ impl Router {
                             #[cfg(feature = "tracing")]
                             warn!("The Error: {e}");
                         }
-                        Ok(_) => {
+                        Ok(()) => {
                             #[cfg(feature = "tracing")]
                             event!(Level::DEBUG, "Succesfully handled a connection.");
                         }

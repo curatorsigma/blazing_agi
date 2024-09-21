@@ -22,7 +22,7 @@ impl AGIMessageBuffer {
         }
     }
 
-    /// Try to parse this_message as an AGIMessage
+    /// Try to parse `self.this_message` as an [`AGIMessage`]
     pub fn try_parse_and_flush(&mut self) -> Result<Option<AGIMessage>, AGIParseError> {
         if self.this_message.is_empty() {
             return Ok(None);
@@ -33,7 +33,7 @@ impl AGIMessageBuffer {
     }
 
     /// Given a single response from a tcp read, parse it and potentially return the next
-    /// AGIMessage it contained
+    /// [`AGIMessage`] it contained
     ///
     /// The string passed here is assumed to contain no \0-bytes
     fn handle_single_call_buffer(
@@ -56,9 +56,8 @@ impl AGIMessageBuffer {
                             Ok(x) => Ok(x),
                             Err(_) => Ok(None),
                         };
-                    } else {
-                        return Ok(None);
                     }
+                    return Ok(None);
                 }
                 // there was a newline. check what type the line is
                 // (the newline IS PART OF the line, so we index ..= here)
@@ -163,7 +162,7 @@ impl Connection {
         }
     }
 
-    /// Read from TcpStream a single time and handle the result
+    /// Read from [`TcpStream`] a single time and handle the result
     async fn read_single_call(&mut self) -> Result<Option<AGIMessage>, AGIParseError> {
         let mut ephemeral_buf = [0_u8; 2048];
         let bytes_read = self
@@ -182,7 +181,7 @@ impl Connection {
             .handle_single_call_buffer(&as_utf8[0..first_zero_index])
     }
 
-    /// Read the next message and parse it as an AGIMessage
+    /// Read the next message and parse it as an [`AGIMessage`]
     pub(crate) async fn read_and_parse(&mut self) -> Result<AGIMessage, AGIParseError> {
         // the message is potentially split across multiple TCP packets (or rather, TcpStream
         // `read`s.

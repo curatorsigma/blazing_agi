@@ -10,6 +10,9 @@ use tracing::{event, Level};
 use crate::{router::Router, AGIError};
 
 /// Actually serve a constructed Router, with a [`TcpListener`].
+///
+/// # Errors
+/// Returns an Error when we are unable to start a [`TcpListener`].
 pub async fn serve(listener: TcpListener, router: Router) -> Result<(), AGIError> {
     let router_arc = Arc::new(router);
     loop {
