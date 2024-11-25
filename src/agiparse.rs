@@ -1,5 +1,5 @@
 //! This module parses packets as AGI Requests or Responses.
-use std::{collections::HashMap, error::Error, fmt::Display, path::PathBuf, str::FromStr};
+use std::{collections::HashMap, error::Error, path::PathBuf, str::FromStr};
 
 use url::Url;
 
@@ -44,8 +44,8 @@ pub enum AGIParseError {
     /// There was a network start line sent after another message
     NetworkStartAfterOtherMessage,
 }
-impl Display for AGIParseError {
-    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+impl core::fmt::Display for AGIParseError {
+    fn fmt(&self, f: &mut core::fmt::Formatter) -> core::fmt::Result {
         match self {
             Self::NoValue(x) => {
                 write!(f, "The line {x} contained no value.")
@@ -127,8 +127,8 @@ pub enum AGIStatusGeneric {
     // 520
     EndUsage,
 }
-impl std::fmt::Display for AGIStatusGeneric {
-    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+impl core::fmt::Display for AGIStatusGeneric {
+    fn fmt(&self, f: &mut core::fmt::Formatter) -> core::fmt::Result {
         match self {
             Self::Ok(result, op_data) => match op_data {
                 Some(x) => {
@@ -180,7 +180,7 @@ impl FromStr for AGIStatusGeneric {
 }
 
 /// The different AGI Request types we may encounter in an `agi_request`.
-/// NOTE: only FastAGI is supported.
+/// NOTE: only `FastAGI` is supported.
 #[derive(Debug, PartialEq, Eq, Clone)]
 pub enum AGIRequestType {
     File(PathBuf),
@@ -198,8 +198,8 @@ impl FromStr for AGIRequestType {
         }
     }
 }
-impl Display for AGIRequestType {
-    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+impl core::fmt::Display for AGIRequestType {
+    fn fmt(&self, f: &mut core::fmt::Formatter) -> core::fmt::Result {
         match self {
             Self::File(x) => {
                 write!(f, "{x:?}")
@@ -252,8 +252,8 @@ pub struct AGIVariableDump {
     /// (n)=>value )
     pub custom_args: HashMap<u8, String>,
 }
-impl Display for AGIVariableDump {
-    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+impl core::fmt::Display for AGIVariableDump {
+    fn fmt(&self, f: &mut core::fmt::Formatter) -> core::fmt::Result {
         writeln!(f, "agi_network_script: {}", self.network_script)?;
         writeln!(f, "agi_request: {}", self.request)?;
         writeln!(f, "agi_channel: {}", self.channel)?;
@@ -496,8 +496,8 @@ impl FromStr for AGIMessage {
         }
     }
 }
-impl Display for AGIMessage {
-    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+impl core::fmt::Display for AGIMessage {
+    fn fmt(&self, f: &mut core::fmt::Formatter) -> core::fmt::Result {
         match self {
             AGIMessage::VariableDump(x) => {
                 write!(f, "{x}")

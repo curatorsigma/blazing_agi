@@ -25,8 +25,8 @@ impl SetVariable {
         Self { var_name, value }
     }
 }
-impl std::fmt::Display for SetVariable {
-    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+impl core::fmt::Display for SetVariable {
+    fn fmt(&self, f: &mut core::fmt::Formatter) -> core::fmt::Result {
         writeln!(f, "SET VARIABLE \"{}\" \"{}\"", self.var_name, self.value)
     }
 }

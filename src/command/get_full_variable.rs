@@ -6,9 +6,9 @@ use super::*;
 // We encode the (potentially) set Channel as part of the Type
 // Here we could have used an Option<String>, but in other cases we will need
 // typestate patterns to ensure that only commands that are actuall allowed can even be built
-pub trait TargetChannel: Send + Sync + std::fmt::Debug {}
+pub trait TargetChannel: Send + Sync + core::fmt::Debug {}
 #[derive(Debug, PartialEq)]
-/// A variant of `TargetChannel`. Use the channel that originated the FastAGI call.
+/// A variant of `TargetChannel`. Use the channel that originated the `FastAGI` call.
 pub struct ThisChannel {}
 impl TargetChannel for ThisChannel {}
 #[derive(Debug, PartialEq)]
@@ -63,13 +63,13 @@ impl GetFullVariable<ThisChannel> {
     }
 }
 
-impl std::fmt::Display for GetFullVariable<ThisChannel> {
-    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+impl core::fmt::Display for GetFullVariable<ThisChannel> {
+    fn fmt(&self, f: &mut core::fmt::Formatter) -> core::fmt::Result {
         writeln!(f, "GET FULL VARIABLE \"{}\"", self.expression)
     }
 }
-impl std::fmt::Display for GetFullVariable<OtherChannel> {
-    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+impl core::fmt::Display for GetFullVariable<OtherChannel> {
+    fn fmt(&self, f: &mut core::fmt::Formatter) -> core::fmt::Result {
         writeln!(
             f,
             "GET FULL VARIABLE \"{}\" \"{}\"",

@@ -59,8 +59,8 @@ pub struct AGIStatusParseError {
     op_data: Option<String>,
     pub(crate) response_to_command: &'static str,
 }
-impl std::fmt::Display for AGIStatusParseError {
-    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+impl core::fmt::Display for AGIStatusParseError {
+    fn fmt(&self, f: &mut core::fmt::Formatter) -> core::fmt::Result {
         write!(
             f,
             "Unable to parse result {}, data {:?} as {} Status.",
@@ -106,7 +106,7 @@ where
 /// The part of the 200(Ok)-Case response that is specific to the issued Command.
 /// The appropriate Response type will be listed under each Command in [`crate::command`].
 pub trait InnerAGIResponse:
-    std::fmt::Debug
+    core::fmt::Debug
     + for<'a> TryFrom<(&'a str, Option<&'a str>), Error = AGIStatusParseError>
     + Send
     + Sync
@@ -114,7 +114,7 @@ pub trait InnerAGIResponse:
 }
 
 /// A command that can be issued via AGI. See examples in src/command/*.rs
-pub trait AGICommand: std::fmt::Display + std::fmt::Debug + Send + Sync {
+pub trait AGICommand: core::fmt::Display + core::fmt::Debug + Send + Sync {
     type Response: InnerAGIResponse;
 }
 

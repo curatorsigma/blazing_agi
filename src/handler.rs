@@ -1,4 +1,4 @@
-//! Defines the [`AGIHandler`], the most basic instrument for answering FastAGI requests.
+//! Defines the [`AGIHandler`], the most basic instrument for answering `FastAGI` requests.
 
 #[cfg(feature = "tracing")]
 extern crate tracing;
@@ -15,7 +15,7 @@ use crate::{command::verbose::Verbose, AGIError, AGIRequest, Connection};
 /// If your handler needs state between different requests, you may want to manually impl
 /// AGIHandler. Make sure to use `#[async_trait::async_trait]` for your impl block.
 #[async_trait::async_trait]
-pub trait AGIHandler: Send + Sync + std::fmt::Debug {
+pub trait AGIHandler: Send + Sync + core::fmt::Debug {
     async fn handle(
         &self,
         connection: &mut Connection,

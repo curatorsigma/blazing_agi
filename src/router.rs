@@ -219,7 +219,7 @@ impl Router {
             // capture: store the value
             if path[idx_in_path].starts_with(':') {
                 let name = path[idx_in_path][1..].to_owned();
-                captures.insert(name.to_owned(), segment_to_match.to_owned());
+                captures.insert(name.clone(), segment_to_match.to_owned());
             // wildcard: match the rest of url and early return
             } else if path[idx_in_path].starts_with('*') {
                 wildcards.push_str(segment_to_match);

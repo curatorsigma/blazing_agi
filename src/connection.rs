@@ -34,7 +34,7 @@ impl AGIMessageBuffer {
         Ok(Some(msg))
     }
 
-    /// Strip of bytes from the buffer until an entire AGIMessage can be parsed from them.
+    /// Strip of bytes from the buffer until an entire [`AGIMessage`] can be parsed from them.
     ///
     /// Returns Err when an error occurs during parsing
     /// Returns OK(None) when there are not enough bytes to constitute an entire Message.
@@ -205,7 +205,7 @@ impl Connection {
         if bytes_read == 0 {
             return Err(AGIParseError::NoBytes);
         };
-        let as_utf8 = ::std::str::from_utf8(&ephemeral_buf).map_err(|_| AGIParseError::NotUtf8)?;
+        let as_utf8 = core::str::from_utf8(&ephemeral_buf).map_err(|_| AGIParseError::NotUtf8)?;
         let first_zero_index = as_utf8.find('\0').unwrap_or(as_utf8.len());
         #[cfg(feature = "tracing")]
         trace!("new bytes read from network in a single call: {as_utf8}");

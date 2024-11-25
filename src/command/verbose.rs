@@ -24,8 +24,8 @@ impl Verbose {
         Self { content: message }
     }
 }
-impl std::fmt::Display for Verbose {
-    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+impl core::fmt::Display for Verbose {
+    fn fmt(&self, f: &mut core::fmt::Formatter) -> core::fmt::Result {
         writeln!(f, "VERBOSE \"{}\"", self.content)
     }
 }

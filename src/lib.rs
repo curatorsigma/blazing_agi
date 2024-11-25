@@ -1,4 +1,4 @@
-//! `blazing_agi` is a fast, ergonomic and correct FastAGI Server.
+//! `blazing_agi` is a fast, ergonomic and correct `FastAGI` Server.
 //!
 //! `blazing_agi` requires the use of [tokio]. Executor independence is currently not a goal.
 //! `blazing_agi` does not currently contain definitions for all AGI commands. Please file an issue
@@ -61,7 +61,7 @@ pub mod layer;
 pub mod router;
 pub mod serve;
 
-/// Contains all the ways in which serving a FastAGI Request can fail.
+/// Contains all the ways in which serving a `FastAGI` Request can fail.
 #[derive(Debug)]
 pub enum AGIError {
     /// Handlers may use this to bubble up errors if they want.
@@ -89,8 +89,8 @@ pub enum AGIError {
     /// actually received is not parsable as the special response type expected.
     AGIStatusUnspecializable(AGIStatusGeneric, &'static str),
 }
-impl std::fmt::Display for AGIError {
-    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+impl core::fmt::Display for AGIError {
+    fn fmt(&self, f: &mut core::fmt::Formatter) -> core::fmt::Result {
         match self {
             Self::WrongSchema(x) => {
                 write!(f, "The schema {x} is not known")
