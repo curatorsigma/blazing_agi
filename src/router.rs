@@ -289,7 +289,7 @@ impl Router {
         let mut conn = Connection::new(stream);
 
         // the first packet has to be agi_network: yes
-        match conn.read_and_parse().await {
+        match conn.read_one_message().await {
             Err(_) => {
                 return;
             }
@@ -306,7 +306,7 @@ impl Router {
 
         // the second has to be a variable dump
         // we parse it and dispatch the correct handler
-        match conn.read_and_parse().await {
+        match conn.read_one_message().await {
             Err(_) => {}
             Ok(AGIMessage::VariableDump(request_data)) => {
                 if let AGIRequestType::FastAGI(_) = request_data.request {
