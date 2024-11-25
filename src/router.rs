@@ -226,7 +226,7 @@ impl Router {
                 for rem in path_segs {
                     wildcards.push('/');
                     wildcards.push_str(rem);
-                };
+                }
                 return Some((captures, Some(wildcards)));
             // normal segment - simply continue iterating
             } else if path[idx_in_path] != segment_to_match {

@@ -64,29 +64,32 @@ impl AGIMessageBuffer {
                 }
                 // there was a newline. check what type the line is
                 // (the newline IS PART OF the line, so we index ..= here)
-                Some(x) => match line_type(&self.this_message[current_line_start..=current_line_start + x]) {
-                    // en empty line always ends another message
-                    // this means that everything until this newline should be parsable as a
-                    // message
-                    LineType::Empty => {
-                        let msg = self.this_message[..=current_line_start + x].parse::<AGIMessage>()?;
-                        let _ = self.this_message.drain(..=current_line_start + x);
-                        return Ok(Some(msg));
+                Some(x) => {
+                    match line_type(&self.this_message[current_line_start..=current_line_start + x])
+                    {
+                        // en empty line always ends another message
+                        // this means that everything until this newline should be parsable as a
+                        // message
+                        LineType::Empty => {
+                            let msg = self.this_message[..=current_line_start + x]
+                                .parse::<AGIMessage>()?;
+                            let _ = self.this_message.drain(..=current_line_start + x);
+                            return Ok(Some(msg));
+                        }
+                        // A status fits on a single line
+                        LineType::Status => {
+                            let msg = self.this_message[..=current_line_start + x]
+                                .parse::<AGIMessage>()?;
+                            let _ = self.this_message.drain(..=current_line_start + x);
+                            return Ok(Some(msg));
+                        }
+                        LineType::NetworkStart => {
+                            let _ = self.this_message.drain(..=current_line_start + x);
+                            return Ok(Some(AGIMessage::NetworkStart));
+                        }
+                        LineType::Unknown => Some(x),
                     }
-                    // A status fits on a single line
-                    LineType::Status => {
-                        let msg = self.this_message[..=current_line_start + x].parse::<AGIMessage>()?;
-                        let _ = self.this_message.drain(..=current_line_start + x);
-                        return Ok(Some(msg));
-                    }
-                    LineType::NetworkStart => {
-                        let _ = self.this_message.drain(..=current_line_start + x);
-                        return Ok(Some(AGIMessage::NetworkStart));
-                    }
-                    LineType::Unknown => {
-                        Some(x)
-                    }
-                },
+                }
             };
         }
     }
@@ -95,10 +98,7 @@ impl AGIMessageBuffer {
     /// [`AGIMessage`] it contained
     ///
     /// The string passed here is assumed to contain no \0-bytes
-    fn handle_single_call_buffer(
-        &mut self,
-        buf: &str,
-    ) -> Result<Vec<AGIMessage>, AGIParseError> {
+    fn handle_single_call_buffer(&mut self, buf: &str) -> Result<Vec<AGIMessage>, AGIParseError> {
         // we get no, one or two messages, but very infrequently more then two
         let mut res = Vec::<AGIMessage>::with_capacity(2);
 
@@ -117,8 +117,7 @@ impl AGIMessageBuffer {
                     return Ok(res);
                 }
             };
-        };
-
+        }
     }
 }
 
@@ -164,7 +163,10 @@ impl Connection {
             .await
             .map_err(AGIError::CannotSendCommand)?;
         // make sure that we get an AGIStatus as a result
-        let response = self.read_one_message().await.map_err(AGIError::ParseError)?;
+        let response = self
+            .read_one_message()
+            .await
+            .map_err(AGIError::ParseError)?;
         Self::agi_response_as_specialized_status::<H>(response)
     }
 
@@ -220,12 +222,14 @@ impl Connection {
         loop {
             match self.queued_messages.pop_front() {
                 None => {}
-                Some(x) => { return Ok(x); }
+                Some(x) => {
+                    return Ok(x);
+                }
             };
             let new_messages = self.read_single_call().await?;
             for new_message in new_messages {
                 self.queued_messages.push_back(new_message);
-            };
+            }
         }
     }
 }
@@ -488,9 +492,7 @@ mod test {
             agi_enhanced: 0.0 \n\
             agi_accountcode: \n\
             agi_threadid: 1104922960 \n\n";
-        let mut res = message_buf
-            .handle_single_call_buffer(message)
-            .unwrap();
+        let mut res = message_buf.handle_single_call_buffer(message).unwrap();
         assert_eq!(res.len(), 2);
         let vardump = res.remove(1);
         let netstart = res.remove(0);
